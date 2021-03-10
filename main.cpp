@@ -5,11 +5,28 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <math.h>
 
 #include "Shader.h"
+#include "Camera.h"
+
+#define DEFAULT_WIDTH 1280
+#define DEFAULT_HEIGHT 720
+#define EPS 0.1
+#define PRECISION 1.0f
+
+glm::vec3 cameraPos, cameraFront, cameraUp, lookAt, moving_up;
+unsigned int width_, height_;
+glm::mat4 projection, view, model, mvp;
+glm::vec2 mousePosOld, angle;
+float deltaTime = 0.0f;	// Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+
+Camera* cam;
 
 int main() {
 	glfwInit();
@@ -18,7 +35,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "SimpleCAD", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -33,16 +50,28 @@ int main() {
 		return -1;
 	}
 
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
 
-	// build and compile our shader program
-	// ------------------------------------
 	// build and compile our shader program
 	// ------------------------------------
 	Shader ourShader("shader.vs", "shader.fs"); // you can name your shader files however you like
 
+	model = glm::mat4(1.0f);
+	view = glm::mat4(1.0f);
+
+	cameraPos = { 0,0,3 };
+	cameraFront = { 0,0,-1 };
+	lookAt = { 0,0,0 };
+	cameraUp = { 0,1,0 };
+
+	angle = { -90.0f, 0.0f };
+
+	cam = new Camera(cameraPos, cameraFront, cameraUp);
+	cam->SetPerspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
 	float vertices[] = {
 	 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, // top right
@@ -76,14 +105,11 @@ int main() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	glm::mat4 view = glm::mat4(1.0f);
-	// note that we're translating the scene in the reverse direction of where we want to move
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	glEnable(GL_DEPTH_TEST);
 
-	glm::mat4 projection;
-	projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+	projection = glm::mat4(cam->GetProjectionMatrix() );
+	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -91,16 +117,31 @@ int main() {
 		// input
 		processInput(window);
 
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		projection = cam->GetProjectionMatrix();
+		view = cam->GetViewMatrix();
+		model = cam->GetWorldModelMatrix();
+		
+		//projection = cam->GetProjectionMatrix();
 		// rendering commands here
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		//int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		//int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+		//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+		//int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		mvp = projection * view * model;
+		int projectionLoc = glGetUniformLocation(ourShader.ID, "mvp");
+		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+
 		// draw our first triangle
 		ourShader.use();
 		glBindVertexArray(VAO);
@@ -122,10 +163,67 @@ int main() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	width_ = width;
+	height_ = height;
 }
 
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	glm::vec2 mousePos = { xpos,ypos };
+	if (cam) {
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+		{
+			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
+			float cameraSpeed = 5.0f * deltaTime;
+
+			diff * cameraSpeed;
+
+	/*		if (angle.y > 90.0f) angle.y = 90.0f - EPS;
+			if (angle.y < -90.0f) angle.y = -90.0f + EPS;
+
+			float radius = glm::length(cameraPos - lookAt);
+
+			cameraPos.x = lookAt.x + radius * glm::cos(glm::radians(angle.y)) * glm::cos(glm::radians(angle.x));
+			cameraPos.z = lookAt.z + radius * -glm::cos(glm::radians(angle.y)) * glm::sin(glm::radians(angle.x));
+			cameraPos.y = lookAt.y + radius * glm::sin(glm::radians(-angle.y));
+
+			cameraFront = glm::normalize(lookAt - cameraPos);
+			cam->LookAt(cameraPos, cameraFront, cameraUp);*/
+
+			cam->RotateWorld({ diff * cameraSpeed, 0 });
+		}
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+		{
+			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
+			float cameraSpeed = 0.1f * deltaTime;
+
+			glm::vec2 movement = diff * cameraSpeed;
+
+			/*glm::vec3 right_movement = cam->GetRightVector() * movement.x;
+			glm::vec3 up_movement = cam->GetUpVector() * -movement.y;
+			
+			cameraPos += right_movement + up_movement;
+			lookAt += right_movement + up_movement;
+
+			cam->LookAt(cameraPos, cameraFront, cameraUp);*/
+
+			cam->TranslateWorld({ movement, 0 });
+		}
+	}
+
+	mousePosOld = mousePos;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	//fov += yoffset / 10;
+
+	//if (fov > -0.1f) fov = -0.1f;
+	//if (fov < -M_PI) fov = -M_PI + 0.01f;
 }
