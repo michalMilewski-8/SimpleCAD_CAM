@@ -249,7 +249,7 @@ void create_torus_points(float* points, unsigned int* triangles, float R, float 
 			triangles[6 * (i * vertical_points_number + j) + 2] =((i + 1) % harizontal_points_number) * vertical_points_number + j;
 			triangles[6 * (i * vertical_points_number + j) + 3] = i * vertical_points_number + j;
 			triangles[6 * (i * vertical_points_number + j) + 4] = ((i + 1) % harizontal_points_number) * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 5] = ((i + 1) % harizontal_points_number) * vertical_points_number + (j + 1) % vertical_points_number;
+			triangles[6 * (i * vertical_points_number + j) + 5] = i  * vertical_points_number + (j + 1) % vertical_points_number;
 		}
 	}
 

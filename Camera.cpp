@@ -18,7 +18,7 @@ void Camera::SetOrthographic(float left, float right, float top, float bottom, f
 	persp[3][0] = -((right + left) / (right - left));
 	persp[3][1] = -((top + bottom) / (top - bottom));
 	persp[3][2] = -((far + near) / (far - near));
-	persp[3][3] = 1;
+	persp[3][3] = -1;
 	m_projection_matrix = persp;
 }
 
