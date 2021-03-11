@@ -21,6 +21,7 @@ public:
 
 	void RotateWorld(glm::vec3 angles);
 	void TranslateWorld(glm::vec3 movement);
+	void ScaleWorld(glm::vec3 movement);
 
 
 private:

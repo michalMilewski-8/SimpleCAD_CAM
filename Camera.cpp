@@ -106,3 +106,13 @@ void Camera::TranslateWorld(glm::vec3 movement)
 	m_world_model_matrix = translate * m_world_model_matrix;
 }
 
+void Camera::ScaleWorld(glm::vec3 movement)
+{
+	glm::mat4 scale = glm::mat4(1.0f);
+	scale[0][0] = movement.x;
+	scale[1][1] = movement.y;
+	scale[2][2] = movement.z;
+
+	m_world_model_matrix = scale * m_world_model_matrix;
+}
+

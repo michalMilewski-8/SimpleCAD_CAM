@@ -25,6 +25,9 @@ float lastFrame = 0.0f; // Time of last frame
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void create_torus_points(float* points, unsigned int* triangles, float R, float r, int vertical_points_number, int harizontal_points_number, glm::vec3 color);
+glm::vec3 torus_point(float alfa_r, float beta_r, float R, float r);
 
 Camera* cam;
 
@@ -54,6 +57,7 @@ int main() {
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 	// build and compile our shader program
 	// ------------------------------------
@@ -73,16 +77,10 @@ int main() {
 	cam->SetPerspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
-	float vertices[] = {
-	 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, // top right
-	 0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f, // bottom right
-	-0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,// bottom left
-	-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f // top left 
-	};
-	unsigned int indices[] = {  // note that we start from 0!
-		0, 1, 3,   // first triangle
-		1, 2, 3    // second triangle
-	};
+	float *vertices = new float[6*10*10];
+	unsigned int *indices = new unsigned int[6*10*10];
+
+	create_torus_points(vertices, indices, 0.5, 0.1, 10, 10, {1,0,0});
 	// setting vertex buffer
 	unsigned int VBO;
 	unsigned int VAO;
@@ -95,10 +93,10 @@ int main() {
 	glBindVertexArray(VAO);
 	// 2. copy our vertices array in a vertex buffer for OpenGL to use
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
 	// 3. copy our index array in a element buffer for OpenGL to use
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
 	// 4. then set the vertex attributes pointers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -107,7 +105,7 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
-	projection = glm::mat4(cam->GetProjectionMatrix() );
+	projection = glm::mat4(cam->GetProjectionMatrix());
 	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
@@ -124,8 +122,7 @@ int main() {
 		projection = cam->GetProjectionMatrix();
 		view = cam->GetViewMatrix();
 		model = cam->GetWorldModelMatrix();
-		
-		//projection = cam->GetProjectionMatrix();
+
 		// rendering commands here
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -146,7 +143,7 @@ int main() {
 		ourShader.use();
 		glBindVertexArray(VAO);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 6*10*10 , GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
 		// check and call events and swap the buffers
@@ -182,19 +179,19 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
 			float cameraSpeed = 5.0f * deltaTime;
 
-			diff * cameraSpeed;
+			diff* cameraSpeed;
 
-	/*		if (angle.y > 90.0f) angle.y = 90.0f - EPS;
-			if (angle.y < -90.0f) angle.y = -90.0f + EPS;
+			/*		if (angle.y > 90.0f) angle.y = 90.0f - EPS;
+					if (angle.y < -90.0f) angle.y = -90.0f + EPS;
 
-			float radius = glm::length(cameraPos - lookAt);
+					float radius = glm::length(cameraPos - lookAt);
 
-			cameraPos.x = lookAt.x + radius * glm::cos(glm::radians(angle.y)) * glm::cos(glm::radians(angle.x));
-			cameraPos.z = lookAt.z + radius * -glm::cos(glm::radians(angle.y)) * glm::sin(glm::radians(angle.x));
-			cameraPos.y = lookAt.y + radius * glm::sin(glm::radians(-angle.y));
+					cameraPos.x = lookAt.x + radius * glm::cos(glm::radians(angle.y)) * glm::cos(glm::radians(angle.x));
+					cameraPos.z = lookAt.z + radius * -glm::cos(glm::radians(angle.y)) * glm::sin(glm::radians(angle.x));
+					cameraPos.y = lookAt.y + radius * glm::sin(glm::radians(-angle.y));
 
-			cameraFront = glm::normalize(lookAt - cameraPos);
-			cam->LookAt(cameraPos, cameraFront, cameraUp);*/
+					cameraFront = glm::normalize(lookAt - cameraPos);
+					cam->LookAt(cameraPos, cameraFront, cameraUp);*/
 
 			cam->RotateWorld({ diff * cameraSpeed, 0 });
 		}
@@ -207,7 +204,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 			/*glm::vec3 right_movement = cam->GetRightVector() * movement.x;
 			glm::vec3 up_movement = cam->GetUpVector() * -movement.y;
-			
+
 			cameraPos += right_movement + up_movement;
 			lookAt += right_movement + up_movement;
 
@@ -222,8 +219,44 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	//fov += yoffset / 10;
+	float precision = 0.01f;
 
-	//if (fov > -0.1f) fov = -0.1f;
-	//if (fov < -M_PI) fov = -M_PI + 0.01f;
+	float movement = 1.0f + yoffset * precision;
+	if (movement <= 0.0f)
+		movement = 0.1f;
+	cam->ScaleWorld({ movement,movement,movement });
 }
+
+void create_torus_points(float* points, unsigned int* triangles, float R, float r, int vertical_points_number, int harizontal_points_number, glm::vec3 color) {
+	float vertical_stride = 360.0f / (vertical_points_number);
+	float horizontal_stride = 360.0f / (harizontal_points_number);
+
+	for (int i = 0; i < harizontal_points_number; i++) {
+		float beta = i * horizontal_stride;
+		for (int j = 0; j < vertical_points_number; j++) {
+			float alfa = j * vertical_stride;
+
+			glm::vec3 point = torus_point(glm::radians(alfa), glm::radians(beta), R, r);
+			points[6 * (i * vertical_points_number + j)] = point.x;
+			points[6 * (i * vertical_points_number + j) + 1] = point.y;
+			points[6 * (i * vertical_points_number + j) + 2] = point.z;
+			points[6 * (i * vertical_points_number + j) + 3] = color.r;
+			points[6 * (i * vertical_points_number + j) + 4] = color.g;
+			points[6 * (i * vertical_points_number + j) + 5] = color.b;
+
+			triangles[6 * (i * vertical_points_number + j)] =  i * vertical_points_number + j;
+			triangles[6 * (i * vertical_points_number + j) + 1] = ((i + 1) % harizontal_points_number) * vertical_points_number + (vertical_points_number + (j - 1) % vertical_points_number) % vertical_points_number;
+			triangles[6 * (i * vertical_points_number + j) + 2] =((i + 1) % harizontal_points_number) * vertical_points_number + j;
+			triangles[6 * (i * vertical_points_number + j) + 3] = i * vertical_points_number + j;
+			triangles[6 * (i * vertical_points_number + j) + 4] = ((i + 1) % harizontal_points_number) * vertical_points_number + j;
+			triangles[6 * (i * vertical_points_number + j) + 5] = ((i + 1) % harizontal_points_number) * vertical_points_number + (j + 1) % vertical_points_number;
+		}
+	}
+
+
+}
+
+glm::vec3 torus_point(float alfa_r, float beta_r, float R, float r) {
+	return { glm::cos(beta_r) * R - glm::sin(alfa_r) * glm::cos(beta_r) * r,glm::sin(beta_r) * R - glm::sin(alfa_r) * glm::sin(beta_r) * r,glm::cos(alfa_r) * r };
+}
+
