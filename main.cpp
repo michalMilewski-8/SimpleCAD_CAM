@@ -9,6 +9,11 @@
 
 #include "Shader.h"
 #include "Camera.h"
+#include "Torus.h"
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 #define DEFAULT_WIDTH 1280
 #define DEFAULT_HEIGHT 720
@@ -26,8 +31,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void create_torus_points(float* points, unsigned int* triangles, float R, float r, int vertical_points_number, int harizontal_points_number, glm::vec3 color);
-glm::vec3 torus_point(float alfa_r, float beta_r, float R, float r);
 
 Camera* cam;
 
@@ -77,37 +80,36 @@ int main() {
 	cam->SetPerspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
-	float *vertices = new float[6*10*10];
-	unsigned int *indices = new unsigned int[6*10*10];
+	//float *vertices = new float[6*10*10];
+	//unsigned int *indices = new unsigned int[6*10*10];
 
-	create_torus_points(vertices, indices, 0.5, 0.1, 10, 10, {1,0,0});
-	// setting vertex buffer
-	unsigned int VBO;
-	unsigned int VAO;
-	unsigned int EBO;
-	glGenBuffers(1, &EBO);
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	// ..:: Initialization code :: ..
-	// 1. bind Vertex Array Object
-	glBindVertexArray(VAO);
-	// 2. copy our vertices array in a vertex buffer for OpenGL to use
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
-	// 3. copy our index array in a element buffer for OpenGL to use
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
-	// 4. then set the vertex attributes pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	//create_torus_points(vertices, indices, 0.5, 0.1, 10, 10, {1,0,0});
+
+	Torus torus = Torus(0.5, 0.1, 10, 10, { 1,1,0,1 },ourShader);
+	
+	//// setting vertex buffer
+	//unsigned int VBO;
+	//unsigned int VAO;
+	//unsigned int EBO;
+	//glGenBuffers(1, &EBO);
+	//glGenVertexArrays(1, &VAO);
+	//glGenBuffers(1, &VBO);
+	//// ..:: Initialization code :: ..
+	//// 1. bind Vertex Array Object
+	//glBindVertexArray(VAO);
+	//// 2. copy our vertices array in a vertex buffer for OpenGL to use
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
+	//// 3. copy our index array in a element buffer for OpenGL to use
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
+	//// 4. then set the vertex attributes pointers
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(1);
 
 	glEnable(GL_DEPTH_TEST);
-
-	projection = glm::mat4(cam->GetProjectionMatrix());
-	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -136,15 +138,15 @@ int main() {
 		//int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
 		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		mvp = projection * view * model;
-		int projectionLoc = glGetUniformLocation(ourShader.ID, "mvp");
-		glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+		torus.DrawObject(mvp);
+		//int projectionLoc = glGetUniformLocation(ourShader.ID, "mvp");
+		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 
-		// draw our first triangle
-		ourShader.use();
-		glBindVertexArray(VAO);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawElements(GL_TRIANGLES, 6*10*10 , GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+		//ourShader.use();
+		//glBindVertexArray(VAO);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//glDrawElements(GL_TRIANGLES, 6*10*10 , GL_UNSIGNED_INT, 0);
+		//glBindVertexArray(0);
 
 		// check and call events and swap the buffers
 		glfwPollEvents();
@@ -226,37 +228,3 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 		movement = 0.1f;
 	cam->ScaleWorld({ movement,movement,movement });
 }
-
-void create_torus_points(float* points, unsigned int* triangles, float R, float r, int vertical_points_number, int harizontal_points_number, glm::vec3 color) {
-	float vertical_stride = 360.0f / (vertical_points_number);
-	float horizontal_stride = 360.0f / (harizontal_points_number);
-
-	for (int i = 0; i < harizontal_points_number; i++) {
-		float beta = i * horizontal_stride;
-		for (int j = 0; j < vertical_points_number; j++) {
-			float alfa = j * vertical_stride;
-
-			glm::vec3 point = torus_point(glm::radians(alfa), glm::radians(beta), R, r);
-			points[6 * (i * vertical_points_number + j)] = point.x;
-			points[6 * (i * vertical_points_number + j) + 1] = point.y;
-			points[6 * (i * vertical_points_number + j) + 2] = point.z;
-			points[6 * (i * vertical_points_number + j) + 3] = color.r;
-			points[6 * (i * vertical_points_number + j) + 4] = color.g;
-			points[6 * (i * vertical_points_number + j) + 5] = color.b;
-
-			triangles[6 * (i * vertical_points_number + j)] =  i * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 1] = ((i + 1) % harizontal_points_number) * vertical_points_number + (vertical_points_number + (j - 1) % vertical_points_number) % vertical_points_number;
-			triangles[6 * (i * vertical_points_number + j) + 2] =((i + 1) % harizontal_points_number) * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 3] = i * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 4] = ((i + 1) % harizontal_points_number) * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 5] = i  * vertical_points_number + (j + 1) % vertical_points_number;
-		}
-	}
-
-
-}
-
-glm::vec3 torus_point(float alfa_r, float beta_r, float R, float r) {
-	return { glm::cos(beta_r) * R - glm::sin(alfa_r) * glm::cos(beta_r) * r,glm::sin(beta_r) * R - glm::sin(alfa_r) * glm::sin(beta_r) * r,glm::cos(alfa_r) * r };
-}
-
