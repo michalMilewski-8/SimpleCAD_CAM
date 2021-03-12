@@ -48,8 +48,8 @@ void Torus::CreateMenu()
 		ImGui::SliderInt("Vertical", &vertical_points_number_new, 1, 100);
 		ImGui::SliderInt("Horizontal", &horizontal_points_number_new, 1, 100);
 		ImGui::Text("Set radiuses:");
-		ImGui::SliderFloat("R", &R_new, 0.01, 100);
-		ImGui::SliderFloat("r", &r_new, 1, 100);
+		ImGui::SliderFloat("R", &R_new, 0.01, 10);
+		ImGui::SliderFloat("r", &r_new, 0.01, 10);
 		ImGui::Text("Set color:");
 		ImGui::ColorPicker4("Color", color_new);
 		ImGui::TreePop();

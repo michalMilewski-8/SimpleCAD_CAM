@@ -223,7 +223,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
 			float cameraSpeed = 15.0f * deltaTime;
 
-			diff* cameraSpeed;
+			diff *= cameraSpeed;
 
 			/*		if (angle.y > 90.0f) angle.y = 90.0f - EPS;
 					if (angle.y < -90.0f) angle.y = -90.0f + EPS;
@@ -237,7 +237,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 					cameraFront = glm::normalize(lookAt - cameraPos);
 					cam->LookAt(cameraPos, cameraFront, cameraUp);*/
 
-			cam->RotateWorld({ diff * cameraSpeed, 0 });
+			cam->RotateWorld({ diff, 0 });
+			//cam->Rotate(diff.x, diff.y);
 		}
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 		{
@@ -255,6 +256,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 			cam->LookAt(cameraPos, cameraFront, cameraUp);*/
 
 			cam->TranslateWorld({ movement, 0 });
+			//cam->MoveTarget({ movement,0,0 });
 		}
 	}
 
@@ -269,4 +271,5 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	if (movement <= 0.0f)
 		movement = 0.1f;
 	cam->ScaleWorld({ movement,movement,movement });
+	//cam->Zoom(movement);
 }

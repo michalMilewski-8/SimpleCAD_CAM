@@ -7,6 +7,12 @@ Camera::Camera(glm::vec3 pos, glm::vec3 forward, glm::vec3 up)
 {
 	LookAt(pos, forward, up);
 	m_world_model_matrix = glm::mat4(1.0f);
+	m_angleX = 0;
+	m_angleY = 0;
+	m_target = glm::vec4(0.0f);
+	m_distance = 1.0f;
+	m_minDistance = 0.1f;
+	m_maxDistance = 1000.0f;
 }
 
 void Camera::SetOrthographic(float left, float right, float top, float bottom, float near, float far)
@@ -114,5 +120,58 @@ void Camera::ScaleWorld(glm::vec3 movement)
 	scale[2][2] = movement.z;
 
 	m_world_model_matrix = scale * m_world_model_matrix;
+}
+
+void Camera::MoveTarget(glm::vec4 v)
+{
+	m_target += v;
+	update_view_matrix();
+}
+
+void Camera::Rotate(float dx, float dy)
+{
+	m_angleX += dx;
+	m_angleX = m_angleX > 180 ? 180 : m_angleX;
+	m_angleX = m_angleX < -180 ? -180 : m_angleX;
+
+	m_angleY += dy;
+	m_angleY = m_angleY > 180 ? 180 : m_angleY;
+	m_angleY = m_angleY < -180 ? -180 : m_angleY;
+	update_view_matrix();
+}
+
+void Camera::Zoom(float dd)
+{
+	m_distance += dd;
+	m_distance = m_distance > m_maxDistance ? m_maxDistance : m_distance;
+	m_distance = m_distance < m_minDistance ? m_minDistance : m_distance;
+	update_view_matrix();
+}
+
+void Camera::update_view_matrix()
+{
+	glm::mat4 x_rotate = glm::mat4(1.0f);
+	x_rotate[1][1] = glm::cos(glm::radians(-m_angleX));
+	x_rotate[2][1] = -glm::sin(glm::radians(-m_angleX));
+	x_rotate[1][2] = glm::sin(glm::radians(-m_angleX));
+	x_rotate[2][2] = glm::cos(glm::radians(-m_angleX));
+
+	glm::mat4 y_rotate = glm::mat4(1.0f);
+	y_rotate[0][0] = glm::cos(glm::radians(-m_angleY));
+	y_rotate[2][0] = -glm::sin(glm::radians(-m_angleY));
+	y_rotate[0][2] = glm::sin(glm::radians(-m_angleY));
+	y_rotate[2][2] = glm::cos(glm::radians(-m_angleY));
+
+	glm::mat4 translate_target = glm::mat4(1.0f);
+	translate_target[3][0] = -m_target.x;
+	translate_target[3][1] = -m_target.y;
+	translate_target[3][2] = -m_target.z;
+
+	glm::mat4 translate_dist = glm::mat4(1.0f);
+	translate_dist[3][0] = 0;
+	translate_dist[3][1] = 0;
+	translate_dist[3][2] = 0;
+
+	m_view_matrix = translate_dist * x_rotate * y_rotate * translate_target;
 }
 
