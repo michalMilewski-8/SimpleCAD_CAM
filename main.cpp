@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <math.h>
+#include <vector>
 
 #include "Shader.h"
 #include "Camera.h"
@@ -26,13 +27,13 @@ glm::mat4 projection, view, model, mvp;
 glm::vec2 mousePosOld, angle;
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
+Camera* cam;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-Camera* cam;
 
 int main() {
 	glfwInit();
@@ -62,6 +63,20 @@ int main() {
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsClassic();
+	const char* glsl_version = "#version 330";
+	// Setup Platform/Renderer bindings
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
 	// build and compile our shader program
 	// ------------------------------------
 	Shader ourShader("shader.vs", "shader.fs"); // you can name your shader files however you like
@@ -85,37 +100,54 @@ int main() {
 
 	//create_torus_points(vertices, indices, 0.5, 0.1, 10, 10, {1,0,0});
 
-	Torus torus = Torus(0.5, 0.1, 10, 10, { 1,1,0,1 },ourShader);
-	
-	//// setting vertex buffer
-	//unsigned int VBO;
-	//unsigned int VAO;
-	//unsigned int EBO;
-	//glGenBuffers(1, &EBO);
-	//glGenVertexArrays(1, &VAO);
-	//glGenBuffers(1, &VBO);
-	//// ..:: Initialization code :: ..
-	//// 1. bind Vertex Array Object
-	//glBindVertexArray(VAO);
-	//// 2. copy our vertices array in a vertex buffer for OpenGL to use
-	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
-	//// 3. copy our index array in a element buffer for OpenGL to use
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
-	//// 4. then set the vertex attributes pointers
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(1);
+	std::vector<Object*> objects_list = std::vector<Object*>();
+	objects_list.push_back(new Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader));
 
-	glEnable(GL_DEPTH_TEST);
+		//// setting vertex buffer
+		//unsigned int VBO;
+		//unsigned int VAO;
+		//unsigned int EBO;
+		//glGenBuffers(1, &EBO);
+		//glGenVertexArrays(1, &VAO);
+		//glGenBuffers(1, &VBO);
+		//// ..:: Initialization code :: ..
+		//// 1. bind Vertex Array Object
+		//glBindVertexArray(VAO);
+		//// 2. copy our vertices array in a vertex buffer for OpenGL to use
+		//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
+		//// 3. copy our index array in a element buffer for OpenGL to use
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
+		//// 4. then set the vertex attributes pointers
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		//glEnableVertexAttribArray(0);
+		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+		//glEnableVertexAttribArray(1);
+
+		glEnable(GL_DEPTH_TEST);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
+		// cleaning frame
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// feed inputs to dear imgui, start new frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 		// input
 		processInput(window);
+		ImGui::Begin("Main Menu");
+		if (ImGui::CollapsingHeader("Objects Present on Scene")) {
+			for (auto& ob : objects_list) {
+				ob->CreateMenu();
+			}
+		}
+
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::End();
 
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
@@ -125,9 +157,6 @@ int main() {
 		view = cam->GetViewMatrix();
 		model = cam->GetWorldModelMatrix();
 
-		// rendering commands here
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//int modelLoc = glGetUniformLocation(ourShader.ID, "model");
 		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -138,7 +167,10 @@ int main() {
 		//int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
 		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		mvp = projection * view * model;
-		torus.DrawObject(mvp);
+
+		for (auto& ob : objects_list) {
+			ob->DrawObject(mvp);
+		}
 		//int projectionLoc = glGetUniformLocation(ourShader.ID, "mvp");
 		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 
@@ -148,14 +180,24 @@ int main() {
 		//glDrawElements(GL_TRIANGLES, 6*10*10 , GL_UNSIGNED_INT, 0);
 		//glBindVertexArray(0);
 
+		// Render dear imgui into screen
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		// check and call events and swap the buffers
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
 
 	// cleanup stuff
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
 	glfwTerminate();
 
+	if (cam)
+		delete cam;
 	return 0;
 }
 
@@ -179,7 +221,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
 		{
 			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
-			float cameraSpeed = 5.0f * deltaTime;
+			float cameraSpeed = 15.0f * deltaTime;
 
 			diff* cameraSpeed;
 
@@ -200,7 +242,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 		{
 			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
-			float cameraSpeed = 0.1f * deltaTime;
+			float cameraSpeed = 0.2f * deltaTime;
 
 			glm::vec2 movement = diff * cameraSpeed;
 

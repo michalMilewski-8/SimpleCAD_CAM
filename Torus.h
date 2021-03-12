@@ -6,7 +6,10 @@ class Torus :
 public:
     Torus(float R, float r, int vertical, int horizontal,glm::vec4 color, Shader sh);
     ~Torus();
+
     virtual void DrawObject(glm::mat4 mvp);
+    virtual void CreateMenu();
+
     float GetR() const { return R; }
     float Getr() const { return r; }
     float GetVertical() const { return vertical_points_number; }

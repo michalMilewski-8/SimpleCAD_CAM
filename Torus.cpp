@@ -27,6 +27,58 @@ void Torus::DrawObject(glm::mat4 mvp)
 	glBindVertexArray(0);
 }
 
+void Torus::CreateMenu()
+{
+
+	float R_new;
+	float r_new;
+	int vertical_points_number_new;
+	int horizontal_points_number_new;
+	float color_new[4];
+
+	if (ImGui::TreeNode("Torus")) {
+		R_new = R;
+		r_new = r;
+		vertical_points_number_new = vertical_points_number;
+		horizontal_points_number_new = horizontal_points_number;
+		for (int i = 0; i < 4; i++)
+			color_new[i] = color[i];
+
+		ImGui::Text("Set number of divistions:");
+		ImGui::SliderInt("Vertical", &vertical_points_number_new, 1, 100);
+		ImGui::SliderInt("Horizontal", &horizontal_points_number_new, 1, 100);
+		ImGui::Text("Set radiuses:");
+		ImGui::SliderFloat("R", &R_new, 0.01, 100);
+		ImGui::SliderFloat("r", &r_new, 1, 100);
+		ImGui::Text("Set color:");
+		ImGui::ColorPicker4("Color", color_new);
+		ImGui::TreePop();
+		ImGui::Separator();
+
+		if (R_new != R || r_new != r ||
+			vertical_points_number_new != vertical_points_number ||
+			horizontal_points_number_new != horizontal_points_number)
+		{
+			R = R_new > 0 ? R_new : R;
+			r = r_new > 0 ? r_new : r;
+			vertical_points_number = vertical_points_number_new > 0 ? vertical_points_number_new : vertical_points_number;
+			horizontal_points_number = horizontal_points_number_new > 0 ? horizontal_points_number_new : horizontal_points_number;
+			update_object();
+		}
+		bool difference = false;
+		for (int i = 0; i < 4; i++)
+			if(color_new[i] != color[i])
+			{
+				difference = true;
+				break;
+			}
+		if (difference) {
+			color = { color_new[0],color_new[1],color_new[2],color_new[3] };
+			update_object();
+		}
+	}
+}
+
 void Torus::SetR(float _R)
 {
 	R = _R;

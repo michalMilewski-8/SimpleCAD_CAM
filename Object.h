@@ -10,11 +10,13 @@
 
 #include "Shader.h"
 #include "Camera.h"
+#include "imgui.h"
 class Object
 {
 public:
 	Object(Shader shader_, int number);
 	virtual void DrawObject(glm::mat4 mvp);
+	virtual void CreateMenu() {};
 protected:
 	unsigned int VBO;
 	unsigned int VAO;
