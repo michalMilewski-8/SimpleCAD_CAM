@@ -271,5 +271,5 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	if (movement <= 0.0f)
 		movement = 0.1f;
 	cam->ScaleWorld({ movement,movement,movement });
-	//cam->Zoom(movement);
+	//cam->Zoom(yoffset);
 }

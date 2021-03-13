@@ -6,11 +6,12 @@
 Camera::Camera(glm::vec3 pos, glm::vec3 forward, glm::vec3 up)
 {
 	LookAt(pos, forward, up);
+	//update_view_matrix();
 	m_world_model_matrix = glm::mat4(1.0f);
 	m_angleX = 0;
 	m_angleY = 0;
 	m_target = glm::vec4(0.0f);
-	m_distance = 1.0f;
+	m_distance = 10.0f;
 	m_minDistance = 0.1f;
 	m_maxDistance = 1000.0f;
 }
@@ -142,7 +143,7 @@ void Camera::Rotate(float dx, float dy)
 
 void Camera::Zoom(float dd)
 {
-	m_distance += dd;
+	m_distance -= dd;
 	m_distance = m_distance > m_maxDistance ? m_maxDistance : m_distance;
 	m_distance = m_distance < m_minDistance ? m_minDistance : m_distance;
 	update_view_matrix();
@@ -151,16 +152,16 @@ void Camera::Zoom(float dd)
 void Camera::update_view_matrix()
 {
 	glm::mat4 x_rotate = glm::mat4(1.0f);
-	x_rotate[1][1] = glm::cos(glm::radians(-m_angleX));
-	x_rotate[2][1] = -glm::sin(glm::radians(-m_angleX));
-	x_rotate[1][2] = glm::sin(glm::radians(-m_angleX));
-	x_rotate[2][2] = glm::cos(glm::radians(-m_angleX));
+	x_rotate[1][1] = glm::cos(glm::radians(-m_angleY));
+	x_rotate[2][1] = -glm::sin(glm::radians(-m_angleY));
+	x_rotate[1][2] = glm::sin(glm::radians(-m_angleY));
+	x_rotate[2][2] = glm::cos(glm::radians(-m_angleY));
 
 	glm::mat4 y_rotate = glm::mat4(1.0f);
-	y_rotate[0][0] = glm::cos(glm::radians(-m_angleY));
-	y_rotate[2][0] = -glm::sin(glm::radians(-m_angleY));
-	y_rotate[0][2] = glm::sin(glm::radians(-m_angleY));
-	y_rotate[2][2] = glm::cos(glm::radians(-m_angleY));
+	y_rotate[0][0] = glm::cos(glm::radians(-m_angleX));
+	y_rotate[2][0] = -glm::sin(glm::radians(-m_angleX));
+	y_rotate[0][2] = glm::sin(glm::radians(-m_angleX));
+	y_rotate[2][2] = glm::cos(glm::radians(-m_angleX));
 
 	glm::mat4 translate_target = glm::mat4(1.0f);
 	translate_target[3][0] = -m_target.x;
@@ -170,7 +171,7 @@ void Camera::update_view_matrix()
 	glm::mat4 translate_dist = glm::mat4(1.0f);
 	translate_dist[3][0] = 0;
 	translate_dist[3][1] = 0;
-	translate_dist[3][2] = 0;
+	translate_dist[3][2] = -m_distance;
 
 	m_view_matrix = translate_dist * x_rotate * y_rotate * translate_target;
 }
