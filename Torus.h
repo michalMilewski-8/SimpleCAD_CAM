@@ -1,5 +1,8 @@
 #pragma once
 #include "Object.h"
+
+
+
 class Torus :
     public Object
 {
@@ -20,6 +23,8 @@ public:
     void SetVertical(int _v);
     void SetHorizontal(float _h);
     void SetColor(glm::vec4 _c);
+
+    static unsigned int counter;
 
 private:
     void create_torus_points();

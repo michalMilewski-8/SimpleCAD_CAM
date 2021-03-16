@@ -34,6 +34,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void adding_menu(std::vector<std::unique_ptr<Object>>& objects);
 
 
 int main() {
@@ -141,12 +142,15 @@ int main() {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		ImGui::ShowDemoWindow();
 		// input
 		processInput(window);
 		ImGui::Begin("Main Menu");
 		if (ImGui::CollapsingHeader("Objects Present on Scene")) {
+			int i = 1;
 			for (auto& ob : objects_list) {
-				ob.get()->CreateMenu();
+				ob->CreateMenu();
 			}
 		}
 
@@ -159,7 +163,7 @@ int main() {
 
 		projection = cam.GetProjectionMatrix();
 		view = cam.GetViewMatrix();
-		//model = cam.GetWorldModelMatrix();
+		model = cam.GetWorldModelMatrix();
 
 
 		//int modelLoc = glGetUniformLocation(ourShader.ID, "model");
@@ -173,6 +177,8 @@ int main() {
 		mvp = projection * view;
 
 		cursor.DrawObject(mvp);
+
+		mvp = mvp * model;
 
 		for (auto& ob : objects_list) {
 			ob.get()->DrawObject(mvp);
@@ -279,4 +285,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 		movement = 0.1f;
 	cam.ScaleWorld({ movement,movement,movement });
 	//cam.Zoom(yoffset);
+}
+
+void adding_menu(std::vector<std::unique_ptr<Object>>& objects) {
+
 }

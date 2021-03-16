@@ -8,7 +8,7 @@ public:
 	~Camera() = default;
 	Camera() = default;
 
-	glm::mat4 GetViewMatrix() const { return m_view_matrix* m_world_model_matrix; }
+	glm::mat4 GetViewMatrix() const { return m_view_matrix; }
 	glm::mat4 GetWorldModelMatrix() const { return m_world_model_matrix; }
 	glm::mat4 GetProjectionMatrix() const { return m_projection_matrix; };
 	glm::vec3 GetRightVector() const { return right; };

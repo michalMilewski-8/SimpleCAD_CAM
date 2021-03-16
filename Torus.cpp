@@ -1,8 +1,12 @@
 #include "Torus.h"
 
+unsigned int Torus::counter = 1;
+
 Torus::Torus(float R, float r, int vertical, int horizontal, glm::vec4 color, Shader sh) :
 	Object(sh, 7)
 {
+	name = "Torus " + std::to_string(counter);
+	counter++;
 	this->R = R;
 	this->r = r;
 	vertical_points_number = vertical;
@@ -28,7 +32,7 @@ void Torus::CreateMenu()
 	int horizontal_points_number_new;
 	float color_new[4];
 
-	if (ImGui::TreeNode("Torus")) {
+	if (ImGui::TreeNode(name.c_str())) {
 		R_new = R;
 		r_new = r;
 		vertical_points_number_new = vertical_points_number;

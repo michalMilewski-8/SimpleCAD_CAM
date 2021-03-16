@@ -22,6 +22,7 @@ protected:
 	unsigned int VBO;
 	unsigned int VAO;
 	unsigned int EBO;
+	std::string name;
 
 	unsigned int description_number;
 	glm::mat4 model;
