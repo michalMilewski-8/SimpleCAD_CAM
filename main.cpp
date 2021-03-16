@@ -27,7 +27,7 @@ glm::mat4 projection, view, model, mvp;
 glm::vec2 mousePosOld, angle;
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
-Camera* cam;
+Camera cam;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -91,8 +91,8 @@ int main() {
 
 	angle = { -90.0f, 0.0f };
 
-	cam = new Camera(cameraPos, cameraFront, cameraUp);
-	cam->SetPerspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+	cam = Camera(cameraPos, cameraFront, cameraUp);
+	cam.SetPerspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
 	//float *vertices = new float[6*10*10];
@@ -100,32 +100,32 @@ int main() {
 
 	//create_torus_points(vertices, indices, 0.5, 0.1, 10, 10, {1,0,0});
 
-	std::vector<Object*> objects_list = std::vector<Object*>();
-	objects_list.push_back(new Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader));
+	std::vector<std::unique_ptr<Object>> objects_list = {};
+	objects_list.emplace_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
 
-		//// setting vertex buffer
-		//unsigned int VBO;
-		//unsigned int VAO;
-		//unsigned int EBO;
-		//glGenBuffers(1, &EBO);
-		//glGenVertexArrays(1, &VAO);
-		//glGenBuffers(1, &VBO);
-		//// ..:: Initialization code :: ..
-		//// 1. bind Vertex Array Object
-		//glBindVertexArray(VAO);
-		//// 2. copy our vertices array in a vertex buffer for OpenGL to use
-		//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
-		//// 3. copy our index array in a element buffer for OpenGL to use
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
-		//// 4. then set the vertex attributes pointers
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		//glEnableVertexAttribArray(0);
-		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-		//glEnableVertexAttribArray(1);
+	//// setting vertex buffer
+	//unsigned int VBO;
+	//unsigned int VAO;
+	//unsigned int EBO;
+	//glGenBuffers(1, &EBO);
+	//glGenVertexArrays(1, &VAO);
+	//glGenBuffers(1, &VBO);
+	//// ..:: Initialization code :: ..
+	//// 1. bind Vertex Array Object
+	//glBindVertexArray(VAO);
+	//// 2. copy our vertices array in a vertex buffer for OpenGL to use
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
+	//// 3. copy our index array in a element buffer for OpenGL to use
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
+	//// 4. then set the vertex attributes pointers
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(1);
 
-		glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -142,7 +142,7 @@ int main() {
 		ImGui::Begin("Main Menu");
 		if (ImGui::CollapsingHeader("Objects Present on Scene")) {
 			for (auto& ob : objects_list) {
-				ob->CreateMenu();
+				ob.get()->CreateMenu();
 			}
 		}
 
@@ -153,9 +153,9 @@ int main() {
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		projection = cam->GetProjectionMatrix();
-		view = cam->GetViewMatrix();
-		model = cam->GetWorldModelMatrix();
+		projection = cam.GetProjectionMatrix();
+		view = cam.GetViewMatrix();
+		//model = cam.GetWorldModelMatrix();
 
 
 		//int modelLoc = glGetUniformLocation(ourShader.ID, "model");
@@ -166,10 +166,10 @@ int main() {
 
 		//int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
 		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		mvp = projection * view * model;
+		mvp = projection * view;
 
 		for (auto& ob : objects_list) {
-			ob->DrawObject(mvp);
+			ob.get()->DrawObject(mvp);
 		}
 		//int projectionLoc = glGetUniformLocation(ourShader.ID, "mvp");
 		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -196,8 +196,6 @@ int main() {
 
 	glfwTerminate();
 
-	if (cam)
-		delete cam;
 	return 0;
 }
 
@@ -217,48 +215,51 @@ void processInput(GLFWwindow* window)
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	glm::vec2 mousePos = { xpos,ypos };
-	if (cam) {
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
-		{
-			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
-			float cameraSpeed = 15.0f * deltaTime;
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+	{
+		glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
+		float cameraSpeed = 19.0f * deltaTime;
 
-			diff *= cameraSpeed;
+		diff *= cameraSpeed;
 
-			/*		if (angle.y > 90.0f) angle.y = 90.0f - EPS;
-					if (angle.y < -90.0f) angle.y = -90.0f + EPS;
+		angle += diff;
 
-					float radius = glm::length(cameraPos - lookAt);
+		if (angle.y > 90.0f) angle.y = 90.0f - EPS;
+		if (angle.y < -90.0f) angle.y = -90.0f + EPS;
+		if (angle.x > 180.0f) angle.x = -180.0f + EPS;
+		if (angle.x < -180.0f) angle.x = 180.0f - EPS;
 
-					cameraPos.x = lookAt.x + radius * glm::cos(glm::radians(angle.y)) * glm::cos(glm::radians(angle.x));
-					cameraPos.z = lookAt.z + radius * -glm::cos(glm::radians(angle.y)) * glm::sin(glm::radians(angle.x));
-					cameraPos.y = lookAt.y + radius * glm::sin(glm::radians(-angle.y));
+		float radius = glm::length(cameraPos - lookAt);
 
-					cameraFront = glm::normalize(lookAt - cameraPos);
-					cam->LookAt(cameraPos, cameraFront, cameraUp);*/
+		cameraPos.x = lookAt.x + radius * glm::cos(glm::radians(angle.y)) * glm::cos(glm::radians(angle.x));
+		cameraPos.z = lookAt.z + radius * -glm::cos(glm::radians(angle.y)) * glm::sin(glm::radians(angle.x));
+		cameraPos.y = lookAt.y + radius * glm::sin(glm::radians(-angle.y));
 
-			cam->RotateWorld({ diff, 0 });
-			//cam->Rotate(diff.x, diff.y);
-		}
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-		{
-			glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
-			float cameraSpeed = 0.2f * deltaTime;
+		cameraFront = glm::normalize(lookAt - cameraPos);
+		cam.LookAt(cameraPos, cameraFront, cameraUp);
 
-			glm::vec2 movement = diff * cameraSpeed;
-
-			/*glm::vec3 right_movement = cam->GetRightVector() * movement.x;
-			glm::vec3 up_movement = cam->GetUpVector() * -movement.y;
-
-			cameraPos += right_movement + up_movement;
-			lookAt += right_movement + up_movement;
-
-			cam->LookAt(cameraPos, cameraFront, cameraUp);*/
-
-			cam->TranslateWorld({ movement, 0 });
-			//cam->MoveTarget({ movement,0,0 });
-		}
+		//cam.RotateWorld({ diff, 0 });
+		//cam.Rotate(-diff.x, diff.y);
 	}
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+	{
+		glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
+		float cameraSpeed = 0.4f * deltaTime;
+
+		glm::vec2 movement = diff * cameraSpeed;
+
+		glm::vec3 right_movement = cam.GetRightVector() * movement.x;
+		glm::vec3 up_movement = cam.GetUpVector() * -movement.y;
+
+		cameraPos += right_movement + up_movement;
+		lookAt += right_movement + up_movement;
+
+		cam.LookAt(cameraPos, cameraFront, cameraUp);
+
+		//cam.TranslateWorld({ movement, 0 });
+		//cam.MoveTarget({ movement.x, -movement.y,0,0 });
+	}
+
 
 	mousePosOld = mousePos;
 }
@@ -270,6 +271,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	float movement = 1.0f + yoffset * precision;
 	if (movement <= 0.0f)
 		movement = 0.1f;
-	cam->ScaleWorld({ movement,movement,movement });
-	//cam->Zoom(yoffset);
+	cam.ScaleWorld({ movement,movement,movement });
+	//cam.Zoom(yoffset);
 }

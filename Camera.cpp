@@ -11,7 +11,7 @@ Camera::Camera(glm::vec3 pos, glm::vec3 forward, glm::vec3 up)
 	m_angleX = 0;
 	m_angleY = 0;
 	m_target = glm::vec4(0.0f);
-	m_distance = 10.0f;
+	m_distance = 3.0f;
 	m_minDistance = 0.1f;
 	m_maxDistance = 1000.0f;
 }

@@ -11,19 +11,11 @@ Torus::Torus(float R, float r, int vertical, int horizontal, glm::vec4 color, Sh
 	update_object();
 }
 
-Torus::~Torus()
-{
-	if (points)
-		delete[] points;
-	if (triangles)
-		delete[] triangles;
-}
-
 void Torus::DrawObject(glm::mat4 mvp)
 {
 	Object::DrawObject(mvp);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, 6* vertical_points_number*horizontal_points_number, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_LINES,triangles.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 
@@ -119,20 +111,20 @@ void Torus::create_torus_points() {
 			float alfa = j * vertical_stride;
 
 			glm::vec3 point = torus_point(glm::radians(alfa), glm::radians(beta));
-			points[description_number * (i * vertical_points_number + j)] = point.x;
-			points[description_number * (i * vertical_points_number + j) + 1] = point.y;
-			points[description_number * (i * vertical_points_number + j) + 2] = point.z;
-			points[description_number * (i * vertical_points_number + j) + 3] = color.r;
-			points[description_number * (i * vertical_points_number + j) + 4] = color.g;
-			points[description_number * (i * vertical_points_number + j) + 5] = color.b;
-			points[description_number * (i * vertical_points_number + j) + 6] = color.b;
+			points.push_back(point.x);
+			points.push_back(point.y);
+			points.push_back(point.z);
+			points.push_back(color.r);
+			points.push_back(color.g);
+			points.push_back(color.b);
+			points.push_back(1.0f);
 
-			triangles[6 * (i * vertical_points_number + j)] = i * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 1] = ((i + 1) % horizontal_points_number) * vertical_points_number + (vertical_points_number + (j - 1) % vertical_points_number) % vertical_points_number;
-			triangles[6 * (i * vertical_points_number + j) + 2] = ((i + 1) % horizontal_points_number) * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 3] = i * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 4] = ((i + 1) % horizontal_points_number) * vertical_points_number + j;
-			triangles[6 * (i * vertical_points_number + j) + 5] = i * vertical_points_number + (j + 1) % vertical_points_number;
+			triangles.push_back(i * vertical_points_number + j);
+			//triangles.push_back(((i + 1) % horizontal_points_number) * vertical_points_number + (vertical_points_number + (j - 1) % vertical_points_number) % vertical_points_number);
+			triangles.push_back(((i + 1) % horizontal_points_number) * vertical_points_number + j);
+			triangles.push_back(i * vertical_points_number + j);
+			//triangles.push_back(((i + 1) % horizontal_points_number) * vertical_points_number + j);
+			triangles.push_back(i * vertical_points_number + (j + 1) % vertical_points_number);
 		}
 	}
 }
@@ -143,13 +135,8 @@ glm::vec3 Torus::torus_point(float alfa_r, float beta_r) {
 
 void Torus::update_object()
 {
-	if (points)
-		delete[] points;
-	if (triangles)
-		delete[] triangles;
-
-	triangles = new unsigned int[description_number * vertical_points_number * horizontal_points_number];
-	points = new float[description_number * vertical_points_number * horizontal_points_number];
+	triangles.clear();
+	points.clear();
 
 	create_torus_points();
 
@@ -157,10 +144,10 @@ void Torus::update_object()
 	glBindVertexArray(VAO);
 	// 2. copy our vertices array in a vertex buffer for OpenGL to use
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * description_number * vertical_points_number * horizontal_points_number, points, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * points.size(), points.data(), GL_DYNAMIC_DRAW);
 	// 3. copy our index array in a element buffer for OpenGL to use
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * description_number * vertical_points_number * horizontal_points_number, triangles, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * triangles.size(), triangles.data(), GL_DYNAMIC_DRAW);
 	// 4. then set the vertex attributes pointers
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, description_number * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);

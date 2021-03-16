@@ -5,7 +5,6 @@ class Torus :
 {
 public:
     Torus(float R, float r, int vertical, int horizontal,glm::vec4 color, Shader sh);
-    ~Torus();
 
     virtual void DrawObject(glm::mat4 mvp);
     virtual void CreateMenu();
@@ -33,7 +32,7 @@ private:
     int horizontal_points_number;
     glm::vec4 color;
 
-    float* points;
-    unsigned int* triangles;
+    std::vector<float> points;
+    std::vector<unsigned int> triangles;
 };
 
