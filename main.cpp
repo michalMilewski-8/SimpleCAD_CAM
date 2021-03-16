@@ -10,6 +10,7 @@
 
 #include "Shader.h"
 #include "Camera.h"
+#include "Cursor.h"
 #include "Torus.h"
 
 #include "imgui.h"
@@ -126,10 +127,13 @@ int main() {
 	//glEnableVertexAttribArray(1);
 
 	glEnable(GL_DEPTH_TEST);
+	
+	Cursor cursor = Cursor(ourShader);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
+		cursor.SetCursorPosition(lookAt);
 		// cleaning frame
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -167,6 +171,8 @@ int main() {
 		//int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
 		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		mvp = projection * view;
+
+		cursor.DrawObject(mvp);
 
 		for (auto& ob : objects_list) {
 			ob.get()->DrawObject(mvp);
