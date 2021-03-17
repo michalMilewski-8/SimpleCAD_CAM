@@ -5,7 +5,8 @@ unsigned int Torus::counter = 1;
 Torus::Torus(float R, float r, int vertical, int horizontal, glm::vec4 color, Shader sh) :
 	Object(sh, 7)
 {
-	name = "Torus " + std::to_string(counter);
+	sprintf_s(name, 512, ("Torus " + std::to_string(counter)).c_str());
+	constname = "Torus " + std::to_string(counter);
 	counter++;
 	this->R = R;
 	this->r = r;
@@ -25,21 +26,34 @@ void Torus::DrawObject(glm::mat4 mvp)
 
 void Torus::CreateMenu()
 {
-
 	float R_new;
 	float r_new;
 	int vertical_points_number_new;
 	int horizontal_points_number_new;
 	float color_new[4];
-
-	if (ImGui::TreeNode(name.c_str())) {
+	char buffer[512];
+	sprintf_s(buffer, "%s###%s", name,constname);
+	if (ImGui::TreeNode(buffer)) {
+		
+		if (ImGui::BeginPopupContextItem())
+		{
+			ImGui::Text("Edit name:");
+			ImGui::InputText("##edit", name, IM_ARRAYSIZE(name));
+			if (ImGui::Button("Close"))
+				ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
+		}                                                    
 		R_new = R;
 		r_new = r;
 		vertical_points_number_new = vertical_points_number;
 		horizontal_points_number_new = horizontal_points_number;
 		for (int i = 0; i < 4; i++)
 			color_new[i] = color[i];
-
+		ImGui::Checkbox("Selected",&selected);
+		if (selected != was_selected_in_last_frame) {
+			update_object();
+			was_selected_in_last_frame = selected;
+		}
 		ImGui::Text("Set number of divistions:");
 		ImGui::SliderInt("Vertical", &vertical_points_number_new, 1, 100);
 		ImGui::SliderInt("Horizontal", &horizontal_points_number_new, 1, 100);
@@ -73,6 +87,7 @@ void Torus::CreateMenu()
 			update_object();
 		}
 	}
+	
 }
 
 void Torus::SetR(float _R)
@@ -118,9 +133,16 @@ void Torus::create_torus_points() {
 			points.push_back(point.x);
 			points.push_back(point.y);
 			points.push_back(point.z);
-			points.push_back(color.r);
-			points.push_back(color.g);
-			points.push_back(color.b);
+			if (!selected) {
+				points.push_back(color.r);
+				points.push_back(color.g);
+				points.push_back(color.b);
+			}
+			else {
+				points.push_back(1.0f);
+				points.push_back(0.0f);
+				points.push_back(0.0f);
+			}
 			points.push_back(1.0f);
 
 			triangles.push_back(i * vertical_points_number + j);

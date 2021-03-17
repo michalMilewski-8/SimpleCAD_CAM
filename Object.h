@@ -18,11 +18,17 @@ public:
 	Object(Shader shader_, int number);
 	virtual void DrawObject(glm::mat4 mvp);
 	virtual void CreateMenu() {};
+	void MoveObject(glm::vec3 movement);
+
+	bool selected;
 protected:
 	unsigned int VBO;
 	unsigned int VAO;
 	unsigned int EBO;
-	std::string name;
+	char name[512];
+	std::string constname;
+
+	bool was_selected_in_last_frame{false};
 
 	unsigned int description_number;
 	glm::mat4 model;

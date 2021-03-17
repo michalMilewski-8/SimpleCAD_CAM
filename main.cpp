@@ -29,12 +29,13 @@ glm::vec2 mousePosOld, angle;
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 Camera cam;
+Shader ourShader;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void adding_menu(std::vector<std::unique_ptr<Object>>& objects);
+void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starting_pos);
 
 
 int main() {
@@ -81,7 +82,8 @@ int main() {
 
 	// build and compile our shader program
 	// ------------------------------------
-	Shader ourShader("shader.vs", "shader.fs"); // you can name your shader files however you like
+	ourShader = Shader("shader.vs", "shader.fs"); // you can name your shader files however you like
+	int to_delete = -1;
 
 	model = glm::mat4(1.0f);
 	view = glm::mat4(1.0f);
@@ -103,7 +105,7 @@ int main() {
 	//create_torus_points(vertices, indices, 0.5, 0.1, 10, 10, {1,0,0});
 
 	std::vector<std::unique_ptr<Object>> objects_list = {};
-	objects_list.emplace_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
+	objects_list.push_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
 
 	//// setting vertex buffer
 	//unsigned int VBO;
@@ -147,13 +149,24 @@ int main() {
 		// input
 		processInput(window);
 		ImGui::Begin("Main Menu");
+		if (ImGui::CollapsingHeader("Add New Objects")) {
+			adding_menu(objects_list,lookAt);
+		}
 		if (ImGui::CollapsingHeader("Objects Present on Scene")) {
-			int i = 1;
+			int i = 0;
 			for (auto& ob : objects_list) {
 				ob->CreateMenu();
+				ImGui::SameLine();
+				if (ImGui::Button(("Delete##"+std::to_string(i)).c_str())) {
+					to_delete = i;
+				}
+				i++;
 			}
 		}
-
+		if (to_delete > -1) {
+			objects_list.erase(objects_list.begin() + to_delete);
+			to_delete = -1;
+		}
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::End();
 
@@ -287,6 +300,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	//cam.Zoom(yoffset);
 }
 
-void adding_menu(std::vector<std::unique_ptr<Object>>& objects) {
-
+void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starting_pos) {
+	if (ImGui::Button("Torus")) {
+		objects.push_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
+		objects.back()->MoveObject(starting_pos);
+	}
 }
