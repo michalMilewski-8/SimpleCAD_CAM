@@ -133,6 +133,7 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 	
 	Cursor cursor = Cursor(ourShader);
+	Cursor center = Cursor(ourShader);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -192,10 +193,27 @@ int main() {
 
 		cursor.DrawObject(mvp);
 
-		mvp = mvp * model;
-
+		
+		int number_of_selected = 0;
+		glm::vec3 center_point = glm::vec3(0.0f);
 		for (auto& ob : objects_list) {
-			ob.get()->DrawObject(mvp);
+			if (ob->selected) {
+				number_of_selected++;
+				center_point += ob->GetPosition();
+			}
+		}
+		if (number_of_selected > 0) {
+			center_point /= number_of_selected;
+			center.SetCursorPosition(center_point);
+			center.DrawObject(mvp);
+		}
+
+		mvp = mvp * model;
+		for (auto& ob : objects_list) {
+			ob->DrawObject(mvp);
+			if (ob->selected) {
+				number_of_selected++;
+			}
 		}
 		//int projectionLoc = glGetUniformLocation(ourShader.ID, "mvp");
 		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -297,8 +315,13 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	float movement = 1.0f + yoffset * precision;
 	if (movement <= 0.0f)
 		movement = 0.1f;
+	//cameraFront = glm::normalize(lookAt - cameraPos);
+	//float dist = glm::length(lookAt - cameraPos);
+	//cameraPos = lookAt - (cameraFront * dist * movement);
+	//cam.LookAt(cameraPos, cameraFront, cameraUp);
 	cam.ScaleWorld({ movement,movement,movement });
-	//cam.Zoom(yoffset);
+	//cam.Zoom(yoffset * precision);
+
 }
 
 void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starting_pos) {

@@ -20,6 +20,8 @@ public:
 	virtual void CreateMenu() {};
 	void MoveObject(glm::vec3 movement);
 
+	glm::vec3 GetPosition();
+
 	bool selected;
 protected:
 	unsigned int VBO;
@@ -33,6 +35,8 @@ protected:
 	unsigned int description_number;
 	glm::mat4 model;
 	glm::mat4 mvp;
+
+	glm::vec3 position;
 
 	glm::vec4 color;
 

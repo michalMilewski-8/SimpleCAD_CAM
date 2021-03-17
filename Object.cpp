@@ -5,7 +5,8 @@ Object::Object(Shader shader_, int number) :
 	description_number(number),
 	model(glm::mat4(1.0f)),
 	mvp(glm::mat4(1.0f)),
-	selected(false)
+	selected(false),
+	position(glm::vec3(0.0f))
 {
 	glGenBuffers(1, &EBO);
 	glGenVertexArrays(1, &VAO);
@@ -24,10 +25,16 @@ void Object::DrawObject(glm::mat4 mvp_)
 
 void Object::MoveObject(glm::vec3 movement)
 {
+	position += movement;
 	glm::mat4 translate = glm::mat4(1.0f);
 	translate[3][0] = movement.x;
 	translate[3][1] = movement.y;
 	translate[3][2] = movement.z;
 
 	model = translate* model;
+}
+
+glm::vec3 Object::GetPosition()
+{
+	return position;
 }
