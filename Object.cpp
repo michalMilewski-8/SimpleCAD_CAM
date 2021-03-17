@@ -1,9 +1,10 @@
 #include "Object.h"
 
-Object::Object(Shader shader_ , int number):
+Object::Object(Shader shader_, int number) :
 	shader(shader_),
 	description_number(number),
-	model(glm::mat4(1.0f))
+	model(glm::mat4(1.0f)),
+	mvp(glm::mat4(1.0f))
 {
 	glGenBuffers(1, &EBO);
 	glGenVertexArrays(1, &VAO);
