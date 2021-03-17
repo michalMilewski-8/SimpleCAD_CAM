@@ -34,6 +34,8 @@ protected:
 	glm::mat4 model;
 	glm::mat4 mvp;
 
+	glm::vec4 color;
+
 	Shader shader;
 };
 

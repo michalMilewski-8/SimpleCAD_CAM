@@ -35,7 +35,6 @@ private:
     float r;
     int vertical_points_number;
     int horizontal_points_number;
-    glm::vec4 color;
 
     std::vector<float> points;
     std::vector<unsigned int> triangles;

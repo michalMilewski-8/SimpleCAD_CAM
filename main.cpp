@@ -12,6 +12,7 @@
 #include "Camera.h"
 #include "Cursor.h"
 #include "Torus.h"
+#include "Point.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -304,5 +305,8 @@ void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starti
 	if (ImGui::Button("Torus")) {
 		objects.push_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
 		objects.back()->MoveObject(starting_pos);
+	}
+	if (ImGui::Button("Point")) {
+		objects.push_back(std::make_unique<Point>(Point(starting_pos,{ 1,1,0,1 },ourShader)));
 	}
 }

@@ -162,6 +162,7 @@
     <ClCompile Include="imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Point.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="Torus.cpp" />
   </ItemGroup>
@@ -177,6 +178,7 @@
     <ClInclude Include="imstb_textedit.h" />
     <ClInclude Include="imstb_truetype.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="Point.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Torus.h" />
   </ItemGroup>
