@@ -134,6 +134,14 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+
+		projection = cam.GetProjectionMatrix();
+		projection_i = glm::inverse(projection);
+		view = cam.GetViewMatrix();
+		view_i = glm::inverse(view);
+
+		mvp = projection * view;
+
 		ImGui::ShowDemoWindow();
 		// input
 		processInput(window);
@@ -144,8 +152,32 @@ int main() {
 		ImGui::InputFloat("X", &(pos.x));
 		ImGui::InputFloat("Y", &(pos.y));
 		ImGui::InputFloat("Z", &(pos.z));
-
 		cursor.SetCursorPosition(pos);
+		glm::vec4 screen_pos = { pos,1.0f };
+
+		screen_pos = projection * view * screen_pos;
+		screen_pos /= screen_pos.w;
+		glm::vec2 real_screenpos = {
+			(screen_pos.x + 1.0f) * width_/2.0f,
+			(-screen_pos.y + 1.0f)* height_/2.0f,
+		};
+
+		glm::vec2 real_screen_pos_tmp = real_screenpos;
+
+		ImGui::Text("screen position");
+		ImGui::InputFloat("X##posx", &(real_screenpos.x));
+		ImGui::InputFloat("Y##posy", &(real_screenpos.y));
+
+		if (real_screenpos != real_screen_pos_tmp) {
+			glm::vec3 start;
+			glm::vec3 end;
+			transform_screen_coordinates_to_world(end, start, real_screenpos.x, real_screenpos.y);
+
+			glm::vec3 se = end - start;
+			glm::vec3 position = start + se * (glm::dot(-cameraFront,start-lookAt) / glm::dot(-se, -cameraFront));
+
+			cursor.SetCursorPosition(position);
+		}
 		ImGui::Text("Select point of transformations");
 
 		ImGui::RadioButton("Center of selected", &e, 0); ImGui::SameLine();
@@ -175,13 +207,6 @@ int main() {
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-
-		projection = cam.GetProjectionMatrix();
-		projection_i = glm::inverse(projection);
-		view = cam.GetViewMatrix();
-		view_i = glm::inverse(view);
-
-		mvp = projection * view;
 
 		cursor.DrawObject(mvp);
 
@@ -256,7 +281,7 @@ void transform_screen_coordinates_to_world(glm::vec3& world_coordinates_end, glm
 	glm::vec4 NDC_ray_end(
 		((float)x_pos / (float)width_ - 0.5f) * 2.0f,
 		-((float)y_pos / (float)height_ - 0.5f) * 2.0f,
-		1.0f,
+		0.0f,
 		1.0f
 	);
 
@@ -300,7 +325,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		glm::vec3 right_movement = cam.GetRightVector() * diff.x;
 		glm::vec3 up_movement = cam.GetUpVector() * diff.y;
 		glm::vec3 angle2 = right_movement + up_movement;
-		glm::vec3 angle2 = { diff,0.0f };
+		//glm::vec3 angle2 = { diff,0.0f };
 
 		glm::mat4 x_rotate = glm::mat4(1.0f);
 		x_rotate[1][1] = glm::cos(glm::radians(angle2.y));
@@ -416,9 +441,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		double x_pos, y_pos;
 		glfwGetCursorPos(window, &x_pos, &y_pos);
 
-		char buf[256];
-		sprintf_s(buf, "x: %f y: %f", x_pos, y_pos);
-		glfwSetWindowTitle(window, buf);
+		//char buf[256];
+		//sprintf_s(buf, "x: %f y: %f", x_pos, y_pos);
+		//glfwSetWindowTitle(window, buf);
 
 		transform_screen_coordinates_to_world(lRayEnd_world, lRayStart_world, x_pos, y_pos);
 
