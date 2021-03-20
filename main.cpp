@@ -206,14 +206,6 @@ int main() {
 				number_of_selected++;
 			}
 		}
-		//int projectionLoc = glGetUniformLocation(ourShader.ID, "mvp");
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-
-		//ourShader.use();
-		//glBindVertexArray(VAO);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		//glDrawElements(GL_TRIANGLES, 6*10*10 , GL_UNSIGNED_INT, 0);
-		//glBindVertexArray(0);
 
 		// Render dear imgui into screen
 		ImGui::Render();
@@ -373,11 +365,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 			cameraFront = glm::normalize(lookAt - cameraPos);
 			cam.LookAt(cameraPos, cameraFront, cameraUp);
 		}
-
-
-
-		//cam.RotateWorld({ diff, 0 });
-		//cam.Rotate(-diff.x, diff.y);
 	}
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
@@ -400,9 +387,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 			cam.LookAt(cameraPos, cameraFront, cameraUp);
 		}
-
-		//cam.TranslateWorld({ movement, 0 });
-		//cam.MoveTarget({ movement.x, -movement.y,0,0 });
 	}
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT == GLFW_PRESS))
 	{
