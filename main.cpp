@@ -25,19 +25,28 @@
 
 glm::vec3 cameraPos, cameraFront, cameraUp, lookAt, moving_up;
 unsigned int width_, height_;
+unsigned int window_width_, window_height_;
+
+int e = 0;
 glm::mat4 projection, view, model, mvp;
+glm::mat4 projection_i, view_i, model_i, mvp_i;
 glm::vec2 mousePosOld, angle;
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 Camera cam;
 Shader ourShader;
+Cursor cursor, center;
+
+std::vector<std::unique_ptr<Object>> objects_list = {};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starting_pos);
-
+void window_size_callback(GLFWwindow* window, int width, int height);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+void transform_screen_coordinates_to_world(glm::vec3& world_coordinates_end, glm::vec3& world_coordinates_start, float x_pos, float y_pos);
 
 int main() {
 	glfwInit();
@@ -62,10 +71,11 @@ int main() {
 	}
 
 	glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -95,50 +105,27 @@ int main() {
 	cameraUp = { 0,1,0 };
 
 	angle = { -90.0f, 0.0f };
+	width_ = DEFAULT_WIDTH;
+	height_ = DEFAULT_HEIGHT;
+	window_height_ = height_;
+	window_width_ = width_;
 
 	cam = Camera(cameraPos, cameraFront, cameraUp);
-	cam.SetPerspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 0.1f, 100.0f);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
-	//float *vertices = new float[6*10*10];
-	//unsigned int *indices = new unsigned int[6*10*10];
-
-	//create_torus_points(vertices, indices, 0.5, 0.1, 10, 10, {1,0,0});
-
-	std::vector<std::unique_ptr<Object>> objects_list = {};
 	objects_list.push_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
 
-	//// setting vertex buffer
-	//unsigned int VBO;
-	//unsigned int VAO;
-	//unsigned int EBO;
-	//glGenBuffers(1, &EBO);
-	//glGenVertexArrays(1, &VAO);
-	//glGenBuffers(1, &VBO);
-	//// ..:: Initialization code :: ..
-	//// 1. bind Vertex Array Object
-	//glBindVertexArray(VAO);
-	//// 2. copy our vertices array in a vertex buffer for OpenGL to use
-	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*10*10*6, vertices, GL_STATIC_DRAW);
-	//// 3. copy our index array in a element buffer for OpenGL to use
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 10 * 10 * 6, indices, GL_STATIC_DRAW);
-	//// 4. then set the vertex attributes pointers
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(1);
-
 	glEnable(GL_DEPTH_TEST);
-	
-	Cursor cursor = Cursor(ourShader);
-	Cursor center = Cursor(ourShader);
+
+	cursor = Cursor(ourShader);
+	center = Cursor(ourShader);
+
+	cursor.SetCursorPosition(lookAt);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
-		cursor.SetCursorPosition(lookAt);
 		// cleaning frame
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -151,15 +138,28 @@ int main() {
 		// input
 		processInput(window);
 		ImGui::Begin("Main Menu");
+		ImGui::Text("Cursor Position");
+		auto pos = cursor.GetPosition();
+		ImGui::Text("world Position");
+		ImGui::InputFloat("X", &(pos.x));
+		ImGui::InputFloat("Y", &(pos.y));
+		ImGui::InputFloat("Z", &(pos.z));
+
+		cursor.SetCursorPosition(pos);
+		ImGui::Text("Select point of transformations");
+
+		ImGui::RadioButton("Center of selected", &e, 0); ImGui::SameLine();
+		ImGui::RadioButton("Cursor position", &e, 1);
+
 		if (ImGui::CollapsingHeader("Add New Objects")) {
-			adding_menu(objects_list,lookAt);
+			adding_menu(objects_list, cursor.GetPosition());
 		}
 		if (ImGui::CollapsingHeader("Objects Present on Scene")) {
 			int i = 0;
 			for (auto& ob : objects_list) {
 				ob->CreateMenu();
 				ImGui::SameLine();
-				if (ImGui::Button(("Delete##"+std::to_string(i)).c_str())) {
+				if (ImGui::Button(("Delete##" + std::to_string(i)).c_str())) {
 					to_delete = i;
 				}
 				i++;
@@ -177,23 +177,15 @@ int main() {
 		lastFrame = currentFrame;
 
 		projection = cam.GetProjectionMatrix();
+		projection_i = glm::inverse(projection);
 		view = cam.GetViewMatrix();
-		model = cam.GetWorldModelMatrix();
+		view_i = glm::inverse(view);
 
-
-		//int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-		//glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-		//int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-		//glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-		//int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 		mvp = projection * view;
 
 		cursor.DrawObject(mvp);
 
-		
+
 		int number_of_selected = 0;
 		glm::vec3 center_point = glm::vec3(0.0f);
 		for (auto& ob : objects_list) {
@@ -208,7 +200,6 @@ int main() {
 			center.DrawObject(mvp);
 		}
 
-		mvp = mvp * model;
 		for (auto& ob : objects_list) {
 			ob->DrawObject(mvp);
 			if (ob->selected) {
@@ -239,15 +230,22 @@ int main() {
 	ImGui::DestroyContext();
 
 	glfwTerminate();
-
+	objects_list.clear();
 	return 0;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	cam.SetPerspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
 	width_ = width;
 	height_ = height;
+}
+
+void window_size_callback(GLFWwindow* window, int width, int height)
+{
+	window_width_ = width;
+	window_height_ = height;
 }
 
 void processInput(GLFWwindow* window)
@@ -256,31 +254,127 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 }
 
+void transform_screen_coordinates_to_world(glm::vec3& world_coordinates_end, glm::vec3& world_coordinates_start, float x_pos, float y_pos) {
+	glm::vec4 NDC_ray_start(
+		((float)x_pos / (float)width_ - 0.5f) * 2.0f,
+		-((float)y_pos / (float)height_ - 0.5f) * 2.0f,
+		-1.0f,
+		1.0f
+	);
+	glm::vec4 NDC_ray_end(
+		((float)x_pos / (float)width_ - 0.5f) * 2.0f,
+		-((float)y_pos / (float)height_ - 0.5f) * 2.0f,
+		1.0f,
+		1.0f
+	);
+
+	glm::vec4 lRayStart_camera = projection_i * NDC_ray_start;
+	lRayStart_camera /= -lRayStart_camera.w;
+	glm::vec4 lRayStart_world = view_i * lRayStart_camera;
+	lRayStart_world /= lRayStart_world.w;
+	glm::vec4 lRayEnd_camera = projection_i * NDC_ray_end;
+	lRayEnd_camera /= -lRayEnd_camera.w;
+	glm::vec4 lRayEnd_world = view_i * lRayEnd_camera;
+	lRayEnd_world /= lRayEnd_world.w;
+
+
+	world_coordinates_end = lRayEnd_world;
+	world_coordinates_start = lRayStart_world;
+
+}
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
 	glm::vec2 mousePos = { xpos,ypos };
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
 	{
+		auto mousePosnorm = mousePos - glm::vec2(width_ / 2, height_ / 2);
+
+		mousePosnorm.x /= width_ / 2.0f;
+		mousePosnorm.y /= height_ / -2.0f;
+
+		glm::vec4 posit = { mousePosnorm,cameraPos.z,1.0f };
+		posit = mvp_i * posit;
+		glm::vec3 positionss = { posit };
+		positionss /= posit.w;
 		glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
-		float cameraSpeed = 19.0f * deltaTime;
+		float cameraSpeed = 10.0f * deltaTime;
+		float radius;
 
 		diff *= cameraSpeed;
 
-		angle += diff;
+		glm::vec3 right_movement = cam.GetRightVector() * diff.x;
+		glm::vec3 up_movement = cam.GetUpVector() * diff.y;
+		glm::vec3 angle2 = right_movement + up_movement;
+		glm::vec3 angle2 = { diff,0.0f };
 
-		if (angle.y > 90.0f) angle.y = 90.0f - EPS;
-		if (angle.y < -90.0f) angle.y = -90.0f + EPS;
-		if (angle.x > 180.0f) angle.x = -180.0f + EPS;
-		if (angle.x < -180.0f) angle.x = 180.0f - EPS;
+		glm::mat4 x_rotate = glm::mat4(1.0f);
+		x_rotate[1][1] = glm::cos(glm::radians(angle2.y));
+		x_rotate[2][1] = glm::sin(glm::radians(angle2.y));
+		x_rotate[1][2] = -glm::sin(glm::radians(angle2.y));
+		x_rotate[2][2] = glm::cos(glm::radians(angle2.y));
 
-		float radius = glm::length(cameraPos - lookAt);
+		glm::mat4 y_rotate = glm::mat4(1.0f);
+		y_rotate[0][0] = glm::cos(glm::radians(angle2.x));
+		y_rotate[2][0] = -glm::sin(glm::radians(angle2.x));
+		y_rotate[0][2] = glm::sin(glm::radians(angle2.x));
+		y_rotate[2][2] = glm::cos(glm::radians(angle2.x));
 
-		cameraPos.x = lookAt.x + radius * glm::cos(glm::radians(angle.y)) * glm::cos(glm::radians(angle.x));
-		cameraPos.z = lookAt.z + radius * -glm::cos(glm::radians(angle.y)) * glm::sin(glm::radians(angle.x));
-		cameraPos.y = lookAt.y + radius * glm::sin(glm::radians(-angle.y));
+		glm::mat4 z_rotate = glm::mat4(1.0f);
+		z_rotate[0][0] = glm::cos(glm::radians(angle2.z));
+		z_rotate[1][0] = -glm::sin(glm::radians(angle2.z));
+		z_rotate[0][1] = glm::sin(glm::radians(angle2.z));
+		z_rotate[1][1] = glm::cos(glm::radians(angle2.z));
 
-		cameraFront = glm::normalize(lookAt - cameraPos);
-		cam.LookAt(cameraPos, cameraFront, cameraUp);
+		auto roation = z_rotate * y_rotate * x_rotate;
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+			switch (e) {
+			case 0:
+				auto odn = center.GetPosition();
+				for (auto& obj : objects_list) {
+					if (obj->selected)
+					{
+						obj->RotateObject(angle2);
+						glm::vec4 pos = { obj->GetPosition() - odn, 0.0f };
+						obj->MoveObjectTo(odn + static_cast<glm::vec3>(roation * pos));
+					}
+				}
+				break;
+			case 1:
+				auto odn2 = cursor.GetPosition();
+				for (auto& obj : objects_list) {
+					if (obj->selected)
+					{
+						obj->RotateObject(angle2);
+						glm::vec4 pos2 = { obj->GetPosition() - odn2, 0.0f };
+						obj->MoveObjectTo(odn2 + static_cast<glm::vec3>(roation * pos2));
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+
+		else {
+			angle += diff;
+			if (angle.y > 90.0f) angle.y = 90.0f - EPS;
+			if (angle.y < -90.0f) angle.y = -90.0f + EPS;
+			if (angle.x > 180.0f) angle.x = -180.0f + EPS;
+			if (angle.x < -180.0f) angle.x = 180.0f - EPS;
+			radius = glm::length(cameraPos - lookAt);
+
+			cameraPos.x = lookAt.x + radius * glm::cos(glm::radians(angle.y)) * glm::cos(glm::radians(angle.x));
+			cameraPos.z = lookAt.z + radius * -glm::cos(glm::radians(angle.y)) * glm::sin(glm::radians(angle.x));
+			cameraPos.y = lookAt.y + radius * glm::sin(glm::radians(-angle.y));
+
+			cameraFront = glm::normalize(lookAt - cameraPos);
+			cam.LookAt(cameraPos, cameraFront, cameraUp);
+		}
+
+
 
 		//cam.RotateWorld({ diff, 0 });
 		//cam.Rotate(-diff.x, diff.y);
@@ -294,32 +388,108 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 		glm::vec3 right_movement = cam.GetRightVector() * movement.x;
 		glm::vec3 up_movement = cam.GetUpVector() * -movement.y;
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+			for (auto& obj : objects_list) {
+				if (obj->selected)
+					obj->MoveObject(-right_movement + -up_movement);
+			}
+		}
+		else {
+			cameraPos += right_movement + up_movement;
+			lookAt += right_movement + up_movement;
 
-		cameraPos += right_movement + up_movement;
-		lookAt += right_movement + up_movement;
-
-		cam.LookAt(cameraPos, cameraFront, cameraUp);
+			cam.LookAt(cameraPos, cameraFront, cameraUp);
+		}
 
 		//cam.TranslateWorld({ movement, 0 });
 		//cam.MoveTarget({ movement.x, -movement.y,0,0 });
 	}
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT == GLFW_PRESS))
+	{
+		glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
+		float cameraSpeed = 0.2f * deltaTime;
 
+		glm::vec2 movement = diff * cameraSpeed;
+
+		glm::vec3 right_movement = cam.GetRightVector() * -movement.x;
+		glm::vec3 up_movement = cam.GetUpVector() * movement.y;
+		cursor.MoveObject(right_movement + up_movement);
+	}
 
 	mousePosOld = mousePos;
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+		float minLength = std::numeric_limits<float>::max();
+
+		Object* closest = nullptr;
+
+		glm::vec3 lRayEnd_world;
+		glm::vec3 lRayStart_world;
+		double x_pos, y_pos;
+		glfwGetCursorPos(window, &x_pos, &y_pos);
+
+		char buf[256];
+		sprintf_s(buf, "x: %f y: %f", x_pos, y_pos);
+		glfwSetWindowTitle(window, buf);
+
+		transform_screen_coordinates_to_world(lRayEnd_world, lRayStart_world, x_pos, y_pos);
+
+		glm::vec3 lRayDir_world(lRayEnd_world - lRayStart_world);
+		lRayDir_world = glm::normalize(lRayDir_world);
+
+		for (auto& obj : objects_list) {
+			if (dynamic_cast<Point*>(obj.get())) {
+				glm::vec3 point = obj->GetPosition();
+				glm::vec3 toPoint(point - glm::vec3(lRayStart_world));
+				glm::vec3 crossp = glm::cross(lRayDir_world, toPoint);
+				float length = glm::length(crossp);
+				if (length < minLength && length < 0.1f)
+				{
+					minLength = length;
+					closest = obj.get();
+				}
+			}
+		}
+		if (closest) {
+			closest->Select();
+		}
+	}
+}
+
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	float precision = 0.01f;
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
 
-	float movement = 1.0f + yoffset * precision;
-	if (movement <= 0.0f)
-		movement = 0.1f;
-	//cameraFront = glm::normalize(lookAt - cameraPos);
-	//float dist = glm::length(lookAt - cameraPos);
-	//cameraPos = lookAt - (cameraFront * dist * movement);
-	//cam.LookAt(cameraPos, cameraFront, cameraUp);
-	cam.ScaleWorld({ movement,movement,movement });
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+		float precision = 0.01f;
+
+		float movement = 1.0f + yoffset * precision;
+		if (movement <= 0.0f)
+			movement = 0.1f;
+		for (auto& obj : objects_list) {
+			if (obj->selected)
+				obj->ResizeObject({ movement,movement,movement });
+		}
+	}
+	else {
+		float precision = 0.01f;
+
+		float movement = 1.0f - yoffset * precision;
+		if (movement <= 0.0f)
+			movement = 0.1f;
+		//TODO: przerobiæ to na coœ ³adniejszego;
+		//cam.ScaleWorld({ movement,movement,movement });
+		cameraFront = glm::normalize(lookAt - cameraPos);
+		float dist = glm::length(lookAt - cameraPos);
+		cameraPos = lookAt - (cameraFront * dist * movement);
+		cam.LookAt(cameraPos, cameraFront, cameraUp);
+	}
+
 	//cam.Zoom(yoffset * precision);
 
 }
@@ -330,6 +500,6 @@ void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starti
 		objects.back()->MoveObject(starting_pos);
 	}
 	if (ImGui::Button("Point")) {
-		objects.push_back(std::make_unique<Point>(Point(starting_pos,{ 1,1,0,1 },ourShader)));
+		objects.push_back(std::make_unique<Point>(Point(starting_pos, { 1,1,0,1 }, ourShader)));
 	}
 }

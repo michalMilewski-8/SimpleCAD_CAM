@@ -34,10 +34,11 @@ Cursor::Cursor(Shader sh) :Object(sh, 7)
 
 void Cursor::SetCursorPosition(glm::vec3 position)
 {
-	model = glm::mat4(1.0f);
-	model[3][0] = position.x;
-	model[3][1] = position.y;
-	model[3][2] = position.z;
+	this->position = position;
+	translate = glm::mat4(1.0f);
+	translate[3][0] = position.x;
+	translate[3][1] = position.y;
+	translate[3][2] = position.z;
 }
 
 void Cursor::DrawObject(glm::mat4 mvp)

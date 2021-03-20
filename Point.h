@@ -11,7 +11,7 @@ public:
 
     static unsigned int counter;
 private:
-    void update_object();
+    virtual void update_object();
 
 };
 

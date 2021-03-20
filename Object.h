@@ -16,14 +16,19 @@ class Object
 {
 public:
 	Object(Shader shader_, int number);
+	Object() = default;
 	virtual void DrawObject(glm::mat4 mvp);
 	virtual void CreateMenu() {};
 	void MoveObject(glm::vec3 movement);
-
+	void MoveObjectTo(glm::vec3 movement);
+	void RotateObject(glm::vec3 movement);
+	void ResizeObject(glm::vec3 movement);
+	void Select();
 	glm::vec3 GetPosition();
 
 	bool selected;
 protected:
+	virtual void update_object() {};
 	unsigned int VBO;
 	unsigned int VAO;
 	unsigned int EBO;
@@ -33,7 +38,11 @@ protected:
 	bool was_selected_in_last_frame{false};
 
 	unsigned int description_number;
-	glm::mat4 model;
+	 
+	glm::mat4 translate;
+	glm::mat4 rotate;
+	glm::mat4 resize;
+	
 	glm::mat4 mvp;
 
 	glm::vec3 position;

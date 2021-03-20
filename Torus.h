@@ -29,7 +29,7 @@ public:
 private:
     void create_torus_points();
     glm::vec3 torus_point(float alfa_r, float beta_r);
-    void update_object();
+    virtual void update_object();
 
     float R;
     float r;
