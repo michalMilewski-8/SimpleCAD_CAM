@@ -46,6 +46,9 @@ protected:
 	glm::mat4 mvp;
 
 	glm::vec3 position;
+	glm::vec3 scale;
+	glm::vec3 angle;
+
 
 	glm::vec4 color;
 

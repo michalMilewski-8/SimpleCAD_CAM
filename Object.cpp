@@ -8,7 +8,9 @@ Object::Object(Shader shader_, int number) :
 	rotate(glm::mat4(1.0f)),
 	mvp(glm::mat4(1.0f)),
 	selected(false),
-	position(glm::vec3(0.0f))
+	position(glm::vec3(0.0f)),
+	scale(glm::vec3(1.0f)),
+	angle(glm::vec3(0.0f))
 {
 	glGenBuffers(1, &EBO);
 	glGenVertexArrays(1, &VAO);
@@ -29,11 +31,11 @@ void Object::MoveObject(glm::vec3 movement)
 {
 	position += movement;
 	glm::mat4 translate_ = glm::mat4(1.0f);
-	translate_[3][0] = movement.x;
-	translate_[3][1] = movement.y;
-	translate_[3][2] = movement.z;
+	translate_[3][0] = position.x;
+	translate_[3][1] = position.y;
+	translate_[3][2] = position.z;
 
-	translate = translate_ * translate;
+	translate = translate_ ;
 }
 
 void Object::MoveObjectTo(glm::vec3 movement)
@@ -49,6 +51,7 @@ void Object::MoveObjectTo(glm::vec3 movement)
 
 void Object::RotateObject(glm::vec3 angles)
 {
+	angle += angles;
 	glm::mat4 x_rotate = glm::mat4(1.0f);
 	x_rotate[1][1] = glm::cos(glm::radians(angles.y));
 	x_rotate[2][1] = glm::sin(glm::radians(angles.y));
@@ -72,12 +75,13 @@ void Object::RotateObject(glm::vec3 angles)
 
 void Object::ResizeObject(glm::vec3 movement)
 {
-	glm::mat4 scale = glm::mat4(1.0f);
-	scale[0][0] = movement.x;
-	scale[1][1] = movement.y;
-	scale[2][2] = movement.z;
+	scale *= movement;
+	glm::mat4 scale2 = glm::mat4(1.0f);
+	scale2[0][0] = scale.x;
+	scale2[1][1] = scale.y;
+	scale2[2][2] = scale.z;
 
-	resize = scale * resize;
+	resize = scale2 ;
 }
 
 void Object::Select()
