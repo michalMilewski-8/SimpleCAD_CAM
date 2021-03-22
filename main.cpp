@@ -111,7 +111,7 @@ int main() {
 	window_width_ = width_;
 
 	cam = Camera(cameraPos, cameraFront, cameraUp);
-	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 0.1f, 100.0f);
+	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 1.0f, 20.0f);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
 	objects_list.push_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
@@ -254,7 +254,7 @@ int main() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-	cam.SetPerspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
+	cam.SetPerspective(glm::radians(45.0f), width / (float)height, 1.0f, 20.0f);
 	width_ = width;
 	height_ = height;
 }
@@ -322,10 +322,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 		diff *= cameraSpeed;
 
-		glm::vec3 right_movement = cam.GetRightVector() * diff.x;
-		glm::vec3 up_movement = cam.GetUpVector() * diff.y;
-		glm::vec3 angle2 = right_movement + up_movement;
-		//glm::vec3 angle2 = { diff,0.0f };
+		//glm::vec3 right_movement = cam.GetRightVector() * diff.x;
+		//glm::vec3 up_movement = cam.GetUpVector() * diff.y;
+		//glm::vec3 angle2 = right_movement + up_movement;
+		glm::vec3 angle2 = { diff,0.0f };
 
 		glm::mat4 x_rotate = glm::mat4(1.0f);
 		x_rotate[1][1] = glm::cos(glm::radians(angle2.y));
