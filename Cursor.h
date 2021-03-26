@@ -8,7 +8,7 @@ public:
     Cursor(Shader sh);
     Cursor() = default;
     void SetCursorPosition(glm::vec3 position);
-    virtual void DrawObject(glm::mat4 mvp);
+    void DrawObject(glm::mat4 mvp) override;
 
 private:
     std::vector<float> points;

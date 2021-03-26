@@ -36,6 +36,7 @@ void Object::MoveObject(glm::vec3 movement)
 	translate_[3][2] = position.z;
 
 	translate = translate_ ;
+	inform_owner_of_change();
 }
 
 void Object::MoveObjectTo(glm::vec3 movement)
@@ -47,6 +48,7 @@ void Object::MoveObjectTo(glm::vec3 movement)
 	translate_[3][2] = movement.z;
 
 	translate = translate_;
+	inform_owner_of_change();
 }
 
 void Object::RotateObject(glm::vec3 angles)
@@ -71,6 +73,7 @@ void Object::RotateObject(glm::vec3 angles)
 	z_rotate[1][1] = glm::cos(glm::radians(angles.z));
 
 	rotate = z_rotate * y_rotate * x_rotate * rotate;
+	inform_owner_of_change();
 }
 
 void Object::ResizeObject(glm::vec3 movement)
@@ -82,6 +85,7 @@ void Object::ResizeObject(glm::vec3 movement)
 	scale2[2][2] = scale.z;
 
 	resize = scale2 ;
+	inform_owner_of_change();
 }
 
 void Object::Select()

@@ -6,12 +6,17 @@ class Point :
 public:
     Point(glm::vec3 position, glm::vec4 color, Shader sh);
 
-    virtual void DrawObject(glm::mat4 mvp);
-    virtual void CreateMenu();
+    void DrawObject(glm::mat4 mvp) override;
+    void CreateMenu() override;
+    
+    void AddOwner(std::shared_ptr<Object> owner);
 
     static unsigned int counter;
 private:
-    virtual void update_object();
+    void update_object() override;
+    void inform_owner_of_change() override;
+
+    std::vector<std::weak_ptr<Object>> owners = {};
 
 };
 

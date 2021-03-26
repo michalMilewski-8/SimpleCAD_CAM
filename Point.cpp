@@ -61,6 +61,11 @@ void Point::CreateMenu()
 	}
 }
 
+void Point::AddOwner(std::shared_ptr<Object> owner)
+{
+	owners.push_back(owner);
+}
+
 void Point::update_object()
 {
 	unsigned int pointt = 0;
@@ -85,4 +90,14 @@ void Point::update_object()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, description_number * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+}
+
+void Point::inform_owner_of_change()
+{
+	for (auto& owner : owners) {
+		if (!owner.expired()) {
+			auto o = owner.lock();
+			o->Update();
+		}
+	}
 }

@@ -13,6 +13,7 @@
 #include "Cursor.h"
 #include "Torus.h"
 #include "Point.h"
+#include "BezierC0.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -37,16 +38,17 @@ Camera cam;
 Shader ourShader;
 Cursor cursor, center;
 
-std::vector<std::unique_ptr<Object>> objects_list = {};
+std::vector<std::shared_ptr<Object>> objects_list = {};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starting_pos);
+void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starting_pos);
 void window_size_callback(GLFWwindow* window, int width, int height);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void transform_screen_coordinates_to_world(glm::vec3& world_coordinates_end, glm::vec3& world_coordinates_start, float x_pos, float y_pos);
+void add_selected_points_to_selected_curve();
 
 int main() {
 	glfwInit();
@@ -114,7 +116,9 @@ int main() {
 	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 1.0f, 20.0f);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
-	objects_list.push_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
+	objects_list.push_back(std::make_shared<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
+	objects_list.back()->screen_height = &height_;
+	objects_list.back()->screen_width = &width_;
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -185,6 +189,9 @@ int main() {
 
 		if (ImGui::CollapsingHeader("Add New Objects")) {
 			adding_menu(objects_list, cursor.GetPosition());
+			if (ImGui::Button("Add selected points to curve")) {
+				add_selected_points_to_selected_curve();
+			}
 		}
 		if (ImGui::CollapsingHeader("Objects Present on Scene")) {
 			int i = 0;
@@ -215,6 +222,7 @@ int main() {
 		glm::vec3 center_point = glm::vec3(0.0f);
 		for (auto& ob : objects_list) {
 			if (ob->selected) {
+				if (std::dynamic_pointer_cast<BezierC0>(ob)) continue;
 				number_of_selected++;
 				center_point += ob->GetPosition();
 			}
@@ -227,9 +235,6 @@ int main() {
 
 		for (auto& ob : objects_list) {
 			ob->DrawObject(mvp);
-			if (ob->selected) {
-				number_of_selected++;
-			}
 		}
 
 		// Render dear imgui into screen
@@ -503,12 +508,70 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 }
 
-void adding_menu(std::vector<std::unique_ptr<Object>>& objects, glm::vec3 starting_pos) {
+void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starting_pos) {
 	if (ImGui::Button("Torus")) {
-		objects.push_back(std::make_unique<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
+		objects.push_back(std::make_shared<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
 		objects.back()->MoveObject(starting_pos);
+		objects.back()->screen_height = &height_;
+		objects.back()->screen_width = &width_;
 	}
+	ImGui::SameLine();
 	if (ImGui::Button("Point")) {
-		objects.push_back(std::make_unique<Point>(Point(starting_pos, { 1,1,0,1 }, ourShader)));
+		auto point = std::make_shared<Point>(Point(starting_pos, { 1,1,0,1 }, ourShader));
+		for(auto& obj : objects)
+		{
+			if (obj->selected) {
+				auto bez = std::dynamic_pointer_cast<BezierC0>(obj);
+				if (bez) {
+					bez->AddPointToCurve(point);
+					point->AddOwner(bez);
+				}
+			}
+		}
+		objects.push_back(point);
+		objects.back()->screen_height = &height_;
+		objects.back()->screen_width = &width_;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("BezierC0")) {
+		auto sh = std::make_shared<BezierC0>(BezierC0(ourShader));
+		for (auto& obj : objects) {
+			if (obj->selected) {
+				auto pt = std::dynamic_pointer_cast<Point>(obj);
+				if (pt) {
+					sh->AddPointToCurve(pt);
+					pt->AddOwner(sh);
+				}
+			}
+		}
+		objects.push_back(sh);
+		objects.back()->screen_height = &height_;
+		objects.back()->screen_width = &width_;
+	}
+}
+
+void add_selected_points_to_selected_curve() {
+	std::shared_ptr<BezierC0> bez;
+	for (auto& obj : objects_list)
+	{
+		if (obj->selected) {
+			bez = std::dynamic_pointer_cast<BezierC0>(obj);
+			if (bez) {
+				break;
+			}
+		}
+	}
+
+	if (!bez) return;
+
+	for (auto& obj : objects_list)
+	{
+		if (obj->selected) {
+			auto point = std::dynamic_pointer_cast<Point>(obj);
+			if (point) {
+				bez->AddPointToCurve(point);
+				point->AddOwner(bez);
+			}
+		}
 	}
 }

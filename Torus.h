@@ -9,8 +9,8 @@ class Torus :
 public:
     Torus(float R, float r, int vertical, int horizontal,glm::vec4 color, Shader sh);
 
-    virtual void DrawObject(glm::mat4 mvp);
-    virtual void CreateMenu();
+    void DrawObject(glm::mat4 mvp) override;
+    void CreateMenu() override;
 
     float GetR() const { return R; }
     float Getr() const { return r; }
@@ -29,7 +29,7 @@ public:
 private:
     void create_torus_points();
     glm::vec3 torus_point(float alfa_r, float beta_r);
-    virtual void update_object();
+    void update_object() override;
 
     float R;
     float r;

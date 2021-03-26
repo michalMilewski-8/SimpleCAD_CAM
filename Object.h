@@ -8,10 +8,14 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <math.h>
 #include <vector>
+#include <algorithm>
 
 #include "Shader.h"
 #include "Camera.h"
 #include "imgui.h"
+
+
+
 class Object
 {
 public:
@@ -24,19 +28,26 @@ public:
 	void RotateObject(glm::vec3 movement);
 	void ResizeObject(glm::vec3 movement);
 	void Select();
+	virtual void Update() {};
+	
 	glm::vec3 GetPosition();
 
+	unsigned int* screen_width;
+	unsigned int* screen_height;
+
 	bool selected;
+	char name[512];
 protected:
 	virtual void update_object() {};
+	virtual void inform_owner_of_change() {};
 	unsigned int VBO;
 	unsigned int VAO;
 	unsigned int EBO;
-	char name[512];
+	
 	std::string constname;
 
 	bool was_selected_in_last_frame{false};
-
+	bool need_update{ false };
 	unsigned int description_number;
 	 
 	glm::mat4 translate;

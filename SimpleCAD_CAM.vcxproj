@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BezierC0.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cursor.cpp" />
     <ClCompile Include="imgui.cpp" />
@@ -167,6 +168,7 @@
     <ClCompile Include="Torus.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BezierC0.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cursor.h" />
     <ClInclude Include="imconfig.h" />
