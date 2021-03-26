@@ -222,7 +222,6 @@ glm::vec3 BezierC0::compute_bezier_curve_at_point(int start, int end, float t)
     }
 
     while (sd > 0) {
-        std::vector<glm::vec3> tmp_sum = {};
         for (int i = 0; i < sd - 1; i++) {
             sub_sum[i] = (sub_sum[i] * (1.0f - t) + sub_sum[i + 1] * t);
         }
