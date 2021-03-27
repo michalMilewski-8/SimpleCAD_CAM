@@ -39,6 +39,7 @@ void BezierC0::CreateMenu()
     float color_new[4];
     char buffer[512];
     char buf[512];
+    int to_delete = -1;
     sprintf_s(buffer, "%s###%sdup", name, constname);
     if (ImGui::TreeNode(buffer)) {
 
@@ -64,9 +65,14 @@ void BezierC0::CreateMenu()
         }
         ImGui::Text("Set color:");
         ImGui::ColorPicker4("Color", color_new);
-        int to_delete = -1;
+       
         if (ImGui::CollapsingHeader("Points on Curve")) {
             for (int i = 0; i < points.size(); i++) {
+                if (points[i].expired())
+                {
+                    to_delete = i;
+                    continue;
+                }
                 auto sp = points[i].lock();
                 ImGui::Text(sp->name); ImGui::SameLine();
                 sprintf_s(buf, "Remove###%sRm%d", sp->name,i);
@@ -77,6 +83,7 @@ void BezierC0::CreateMenu()
         }
         if (to_delete >= 0) {
             points.erase(points.begin() + to_delete);
+            Update();
         }
 
         ImGui::TreePop();

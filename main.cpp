@@ -26,7 +26,6 @@
 
 glm::vec3 cameraPos, cameraFront, cameraUp, lookAt, moving_up;
 unsigned int width_, height_;
-unsigned int window_width_, window_height_;
 
 int e = 0;
 glm::mat4 projection, view, model, mvp;
@@ -45,10 +44,10 @@ void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starting_pos);
-void window_size_callback(GLFWwindow* window, int width, int height);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void transform_screen_coordinates_to_world(glm::vec3& world_coordinates_end, glm::vec3& world_coordinates_start, float x_pos, float y_pos);
 void add_selected_points_to_selected_curve();
+void create_gui();
 
 int main() {
 	glfwInit();
@@ -74,7 +73,6 @@ int main() {
 
 	glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -96,7 +94,7 @@ int main() {
 	// build and compile our shader program
 	// ------------------------------------
 	ourShader = Shader("shader.vs", "shader.fs"); // you can name your shader files however you like
-	int to_delete = -1;
+	Shader gridShader = Shader("shader_grid.vs", "shader_grid.fs");
 
 	model = glm::mat4(1.0f);
 	view = glm::mat4(1.0f);
@@ -109,8 +107,6 @@ int main() {
 	angle = { -90.0f, 0.0f };
 	width_ = DEFAULT_WIDTH;
 	height_ = DEFAULT_HEIGHT;
-	window_height_ = height_;
-	window_width_ = width_;
 
 	cam = Camera(cameraPos, cameraFront, cameraUp);
 	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 1.0f, 20.0f);
@@ -126,18 +122,32 @@ int main() {
 	center = Cursor(ourShader);
 
 	cursor.SetCursorPosition(lookAt);
+	float vertices[] = {
+	  -0.5f, 0.0f, -0.5f,
+	  -0.5f, 0.0f, +0.5f,
+	  +0.5f, 0.0f, +0.5f,
+	  +0.5f, 0.0f, -0.5f,
+	};
+
+	unsigned int VBO, VAO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// cleaning frame
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		// feed inputs to dear imgui, start new frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
 
 		projection = cam.GetProjectionMatrix();
 		projection_i = glm::inverse(projection);
@@ -146,70 +156,17 @@ int main() {
 
 		mvp = projection * view;
 
-		ImGui::ShowDemoWindow();
-		// input
 		processInput(window);
-		ImGui::Begin("Main Menu");
-		ImGui::Text("Cursor Position");
-		auto pos = cursor.GetPosition();
-		ImGui::Text("world Position");
-		ImGui::InputFloat("X", &(pos.x));
-		ImGui::InputFloat("Y", &(pos.y));
-		ImGui::InputFloat("Z", &(pos.z));
-		cursor.SetCursorPosition(pos);
-		glm::vec4 screen_pos = { pos,1.0f };
+		create_gui();
 
-		screen_pos = projection * view * screen_pos;
-		screen_pos /= screen_pos.w;
-		glm::vec2 real_screenpos = {
-			(screen_pos.x + 1.0f) * width_/2.0f,
-			(-screen_pos.y + 1.0f)* height_/2.0f,
-		};
+		//int projectionLoc = glGetUniformLocation(gridShader.ID, "proj");
+		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		//int viewLoc = glGetUniformLocation(gridShader.ID, "vieww");
+		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-		glm::vec2 real_screen_pos_tmp = real_screenpos;
-
-		ImGui::Text("screen position");
-		ImGui::InputFloat("X##posx", &(real_screenpos.x));
-		ImGui::InputFloat("Y##posy", &(real_screenpos.y));
-
-		if (real_screenpos != real_screen_pos_tmp) {
-			glm::vec3 start;
-			glm::vec3 end;
-			transform_screen_coordinates_to_world(end, start, real_screenpos.x, real_screenpos.y);
-
-			glm::vec3 se = end - start;
-			glm::vec3 position = start + se * (glm::dot(-cameraFront,start-lookAt) / glm::dot(-se, -cameraFront));
-
-			cursor.SetCursorPosition(position);
-		}
-		ImGui::Text("Select point of transformations");
-
-		ImGui::RadioButton("Center of selected", &e, 0); ImGui::SameLine();
-		ImGui::RadioButton("Cursor position", &e, 1);
-
-		if (ImGui::CollapsingHeader("Add New Objects")) {
-			adding_menu(objects_list, cursor.GetPosition());
-			if (ImGui::Button("Add selected points to curve")) {
-				add_selected_points_to_selected_curve();
-			}
-		}
-		if (ImGui::CollapsingHeader("Objects Present on Scene")) {
-			int i = 0;
-			for (auto& ob : objects_list) {
-				ob->CreateMenu();
-				ImGui::SameLine();
-				if (ImGui::Button(("Delete##" + std::to_string(i)).c_str())) {
-					to_delete = i;
-				}
-				i++;
-			}
-		}
-		if (to_delete > -1) {
-			objects_list.erase(objects_list.begin() + to_delete);
-			to_delete = -1;
-		}
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		ImGui::End();
+		//gridShader.use();
+		//glBindVertexArray(VAO);
+		//glDrawArrays(GL_QUADS, 0, 4);
 
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
@@ -262,12 +219,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	cam.SetPerspective(glm::radians(45.0f), width / (float)height, 1.0f, 20.0f);
 	width_ = width;
 	height_ = height;
-}
-
-void window_size_callback(GLFWwindow* window, int width, int height)
-{
-	window_width_ = width;
-	window_height_ = height;
 }
 
 void processInput(GLFWwindow* window)
@@ -511,13 +462,15 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starting_pos) {
 	if (ImGui::Button("Torus")) {
 		objects.push_back(std::make_shared<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
-		objects.back()->MoveObject(starting_pos);
 		objects.back()->screen_height = &height_;
 		objects.back()->screen_width = &width_;
+		objects.back()->MoveObject(starting_pos);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Point")) {
 		auto point = std::make_shared<Point>(Point(starting_pos, { 1,1,0,1 }, ourShader));
+		point->screen_height = &height_;
+		point->screen_width = &width_;
 		for(auto& obj : objects)
 		{
 			if (obj->selected) {
@@ -529,12 +482,12 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 			}
 		}
 		objects.push_back(point);
-		objects.back()->screen_height = &height_;
-		objects.back()->screen_width = &width_;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("BezierC0")) {
 		auto sh = std::make_shared<BezierC0>(BezierC0(ourShader));
+		sh->screen_height = &height_;
+		sh->screen_width = &width_;
 		for (auto& obj : objects) {
 			if (obj->selected) {
 				auto pt = std::dynamic_pointer_cast<Point>(obj);
@@ -545,8 +498,6 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 			}
 		}
 		objects.push_back(sh);
-		objects.back()->screen_height = &height_;
-		objects.back()->screen_width = &width_;
 	}
 }
 
@@ -574,4 +525,82 @@ void add_selected_points_to_selected_curve() {
 			}
 		}
 	}
+}
+
+void objects_on_scene_gui() {
+	int to_delete = -1;
+	if (ImGui::CollapsingHeader("Objects Present on Scene")) {
+		int i = 0;
+		for (auto& ob : objects_list) {
+			ob->CreateMenu();
+			ImGui::SameLine();
+			if (ImGui::Button(("Delete##" + std::to_string(i)).c_str())) {
+				to_delete = i;
+			}
+			i++;
+		}
+	}
+	if (to_delete > -1) {
+		objects_list.erase(objects_list.begin() + to_delete);
+		to_delete = -1;
+		std::for_each(objects_list.begin(), objects_list.end(), [](std::shared_ptr<Object> obj) {obj->Update(); });
+	}
+}
+
+void adding_new_objects_gui() {
+	if (ImGui::CollapsingHeader("Add New Objects")) {
+		adding_menu(objects_list, cursor.GetPosition());
+		if (ImGui::Button("Add selected points to curve")) {
+			add_selected_points_to_selected_curve();
+		}
+	}
+}
+
+void cursor_position_gui() {
+	ImGui::Text("Cursor Position");
+	auto pos = cursor.GetPosition();
+	ImGui::Text("world Position");
+	ImGui::InputFloat("X", &(pos.x));
+	ImGui::InputFloat("Y", &(pos.y));
+	ImGui::InputFloat("Z", &(pos.z));
+	cursor.SetCursorPosition(pos);
+	glm::vec4 screen_pos = { pos,1.0f };
+	screen_pos = projection * view * screen_pos;
+	screen_pos /= screen_pos.w;
+	glm::vec2 real_screenpos = {
+		(screen_pos.x + 1.0f) * width_ / 2.0f,
+		(-screen_pos.y + 1.0f) * height_ / 2.0f,
+	};
+	glm::vec2 real_screen_pos_tmp = real_screenpos;
+	ImGui::Text("screen position");
+	ImGui::InputFloat("X##posx", &(real_screenpos.x));
+	ImGui::InputFloat("Y##posy", &(real_screenpos.y));
+	if (real_screenpos != real_screen_pos_tmp) {
+		glm::vec3 start;
+		glm::vec3 end;
+		transform_screen_coordinates_to_world(end, start, real_screenpos.x, real_screenpos.y);
+		glm::vec3 se = end - start;
+		glm::vec3 position = start + se * (glm::dot(-cameraFront, start - lookAt) / glm::dot(-se, -cameraFront));
+		cursor.SetCursorPosition(position);
+	}
+}
+
+void choosing_point_of_transformation_gui() {
+	ImGui::Text("Select point of transformations");
+	ImGui::RadioButton("Center of selected", &e, 0); ImGui::SameLine();
+	ImGui::RadioButton("Cursor position", &e, 1);
+}
+
+void create_gui() {
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	//ImGui::ShowDemoWindow();
+	ImGui::Begin("Main Menu");
+	cursor_position_gui();
+	choosing_point_of_transformation_gui();
+	adding_new_objects_gui();
+	objects_on_scene_gui();
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	ImGui::End();
 }

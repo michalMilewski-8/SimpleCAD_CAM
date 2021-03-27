@@ -111,5 +111,7 @@
   <ItemGroup>
     <None Include="shader.vs" />
     <None Include="shader.fs" />
+    <None Include="shader_grid.vs" />
+    <None Include="shader_grid.fs" />
   </ItemGroup>
 </Project>
