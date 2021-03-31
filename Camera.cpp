@@ -2,7 +2,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-
 Camera::Camera(glm::vec3 pos, glm::vec3 forward, glm::vec3 up)
 {
 	LookAt(pos, forward, up);

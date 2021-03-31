@@ -1,5 +1,26 @@
 #include "Object.h"
 
+glm::quat Object::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
+	start = normalize(start);
+	dest = normalize(dest);
+
+	float cosTheta = dot(start, dest);
+	glm::vec3 rotationAxis;
+
+	rotationAxis = cross(start, dest);
+
+	float s = sqrt((1 + cosTheta) * 2);
+	float invs = 1 / s;
+
+	return glm::quat(
+		s * 0.5f,
+		rotationAxis.x * invs,
+		rotationAxis.y * invs,
+		rotationAxis.z * invs
+	);
+
+}
+
 Object::Object(Shader shader_, int number) :
 	shader(shader_),
 	description_number(number),
@@ -10,7 +31,8 @@ Object::Object(Shader shader_, int number) :
 	selected(false),
 	position(glm::vec3(0.0f)),
 	scale(glm::vec3(1.0f)),
-	angle(glm::vec3(0.0f))
+	angle(glm::vec3(0.0f)),
+	quaternion_rotation(glm::quat(1,0,0,0))
 {
 	glGenBuffers(1, &EBO);
 	glGenVertexArrays(1, &VAO);
@@ -73,6 +95,27 @@ void Object::RotateObject(glm::vec3 angles)
 	z_rotate[1][1] = glm::cos(glm::radians(angles.z));
 
 	rotate = z_rotate * y_rotate * x_rotate * rotate;
+	inform_owner_of_change();
+}
+
+void Object::RotateObject(glm::quat rotation)
+{
+	quaternion_rotation = rotation * quaternion_rotation;
+
+	rotate = glm::mat4(1.0f);
+
+	rotate[0][0] = 1 - 2 * quaternion_rotation.y * quaternion_rotation.y - 2 * quaternion_rotation.z * quaternion_rotation.z;
+	rotate[0][1] = 2 * quaternion_rotation.x * quaternion_rotation.y + 2 * quaternion_rotation.w * quaternion_rotation.z;
+	rotate[0][2] = 2 * quaternion_rotation.x * quaternion_rotation.z - 2 * quaternion_rotation.w * quaternion_rotation.y;
+
+	rotate[1][0] = 2 * quaternion_rotation.x * quaternion_rotation.y - 2 * quaternion_rotation.w * quaternion_rotation.z;
+	rotate[1][1] = 1 - 2 * quaternion_rotation.x * quaternion_rotation.x - 2 * quaternion_rotation.z * quaternion_rotation.z;
+	rotate[1][2] = 2 * quaternion_rotation.y * quaternion_rotation.z + 2 * quaternion_rotation.w * quaternion_rotation.x;
+
+	rotate[2][0] = 2 * quaternion_rotation.x * quaternion_rotation.z + 2 * quaternion_rotation.w * quaternion_rotation.y;
+	rotate[2][1] = 2 * quaternion_rotation.z * quaternion_rotation.y - 2 * quaternion_rotation.w * quaternion_rotation.x;
+	rotate[2][2] = 1 - 2 * quaternion_rotation.x * quaternion_rotation.x - 2 * quaternion_rotation.y * quaternion_rotation.y;
+
 	inform_owner_of_change();
 }
 

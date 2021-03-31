@@ -156,7 +156,7 @@ void BezierC0::create_curve()
     for (int iter = 0; iter+1 < points_.size();) {
         int start = iter;
         int end = iter + 1;
-        for (int i = 0; i < 4 && end < points_.size(); i++) { iter++; end++; }
+        for (int i = 0; i < 3 && end < points_.size(); i++) { iter++; end++; }
         number_of_divisions = 1;
         for (int odl = start; odl < end-1 ; odl++) {
             glm::vec4 A = { points_[odl],1 };

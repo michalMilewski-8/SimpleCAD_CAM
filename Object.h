@@ -6,6 +6,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <math.h>
 #include <vector>
 #include <algorithm>
@@ -26,9 +29,12 @@ public:
 	void MoveObject(glm::vec3 movement);
 	void MoveObjectTo(glm::vec3 movement);
 	void RotateObject(glm::vec3 movement);
+	void RotateObject(glm::quat rotation);
 	void ResizeObject(glm::vec3 movement);
 	void Select();
 	virtual void Update() {};
+
+	static glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
 	
 	glm::vec3 GetPosition();
 
@@ -59,6 +65,7 @@ protected:
 	glm::vec3 position;
 	glm::vec3 scale;
 	glm::vec3 angle;
+	glm::quat quaternion_rotation;
 
 
 	glm::vec4 color;

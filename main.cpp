@@ -5,6 +5,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <math.h>
 #include <vector>
 
@@ -263,45 +266,18 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	glm::vec2 mousePos = { xpos,ypos };
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
 	{
-		auto mousePosnorm = mousePos - glm::vec2(width_ / 2, height_ / 2);
-
-		mousePosnorm.x /= width_ / 2.0f;
-		mousePosnorm.y /= height_ / -2.0f;
-
-		glm::vec4 posit = { mousePosnorm,cameraPos.z,1.0f };
-		posit = mvp_i * posit;
-		glm::vec3 positionss = { posit };
-		positionss /= posit.w;
 		glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
-		float cameraSpeed = 10.0f * deltaTime;
+		float cameraSpeed = 5.0f * deltaTime;
 		float radius;
 
 		diff *= cameraSpeed;
 
-		//glm::vec3 right_movement = cam.GetRightVector() * diff.x;
-		//glm::vec3 up_movement = cam.GetUpVector() * diff.y;
-		//glm::vec3 angle2 = right_movement + up_movement;
-		glm::vec3 angle2 = { diff,0.0f };
+		glm::vec3 right_movement = cam.GetRightVector() * -diff.x;
+		glm::vec3 up_movement = cam.GetUpVector() * diff.y;
+		glm::vec3 angle2 = lookAt - (cameraPos + right_movement + up_movement);
 
-		glm::mat4 x_rotate = glm::mat4(1.0f);
-		x_rotate[1][1] = glm::cos(glm::radians(angle2.y));
-		x_rotate[2][1] = glm::sin(glm::radians(angle2.y));
-		x_rotate[1][2] = -glm::sin(glm::radians(angle2.y));
-		x_rotate[2][2] = glm::cos(glm::radians(angle2.y));
-
-		glm::mat4 y_rotate = glm::mat4(1.0f);
-		y_rotate[0][0] = glm::cos(glm::radians(angle2.x));
-		y_rotate[2][0] = -glm::sin(glm::radians(angle2.x));
-		y_rotate[0][2] = glm::sin(glm::radians(angle2.x));
-		y_rotate[2][2] = glm::cos(glm::radians(angle2.x));
-
-		glm::mat4 z_rotate = glm::mat4(1.0f);
-		z_rotate[0][0] = glm::cos(glm::radians(angle2.z));
-		z_rotate[1][0] = -glm::sin(glm::radians(angle2.z));
-		z_rotate[0][1] = glm::sin(glm::radians(angle2.z));
-		z_rotate[1][1] = glm::cos(glm::radians(angle2.z));
-
-		auto roation = z_rotate * y_rotate * x_rotate;
+		auto rotation = Object::RotationBetweenVectors(lookAt - cameraPos, angle2);
+		auto roation = glm::toMat4(rotation);
 		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
 			switch (e) {
 			case 0:
@@ -309,7 +285,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 				for (auto& obj : objects_list) {
 					if (obj->selected)
 					{
-						obj->RotateObject(angle2);
+						obj->RotateObject(rotation);
 						glm::vec4 pos = { obj->GetPosition() - odn, 0.0f };
 						obj->MoveObjectTo(odn + static_cast<glm::vec3>(roation * pos));
 					}
@@ -320,7 +296,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 				for (auto& obj : objects_list) {
 					if (obj->selected)
 					{
-						obj->RotateObject(angle2);
+						obj->RotateObject(rotation);
 						glm::vec4 pos2 = { obj->GetPosition() - odn2, 0.0f };
 						obj->MoveObjectTo(odn2 + static_cast<glm::vec3>(roation * pos2));
 					}
