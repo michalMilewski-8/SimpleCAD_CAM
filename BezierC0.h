@@ -27,6 +27,8 @@ private:
     bool draw_polygon;
     bool was_draw_polygon;
 
+    Shader geometry_one;
+
     glm::vec3 sub_sum[5];
     std::vector<std::weak_ptr<Point>> points;
     std::vector<glm::vec3> points_;

@@ -228,6 +228,14 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+		for (auto& obj : objects_list) {
+			if (obj->selected)
+			{
+				obj->UnSelect();
+			}
+		}
+	}
 }
 
 void transform_screen_coordinates_to_world(glm::vec3& world_coordinates_end, glm::vec3& world_coordinates_start, float x_pos, float y_pos) {
@@ -269,7 +277,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
 		float cameraSpeed = 5.0f * deltaTime;
 		float radius;
-
 		diff *= cameraSpeed;
 
 		glm::vec3 right_movement = cam.GetRightVector() * -diff.x;

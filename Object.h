@@ -32,6 +32,7 @@ public:
 	void RotateObject(glm::quat rotation);
 	void ResizeObject(glm::vec3 movement);
 	void Select();
+	void UnSelect();
 	virtual void Update() {};
 
 	static glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);

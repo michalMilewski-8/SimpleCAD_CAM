@@ -42,10 +42,10 @@ Object::Object(Shader shader_, int number) :
 void Object::DrawObject(glm::mat4 mvp_)
 {	
 	mvp = mvp_ * translate * rotate * resize;
+	shader.use();
 	int projectionLoc = glGetUniformLocation(shader.ID, "mvp");
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 
-	shader.use();
 	glBindVertexArray(VAO);
 }
 
@@ -134,6 +134,15 @@ void Object::ResizeObject(glm::vec3 movement)
 void Object::Select()
 {
 	selected = true;
+	if (selected != was_selected_in_last_frame) {
+		update_object();
+		was_selected_in_last_frame = selected;
+	}
+}
+
+void Object::UnSelect()
+{
+	selected = false;
 	if (selected != was_selected_in_last_frame) {
 		update_object();
 		was_selected_in_last_frame = selected;

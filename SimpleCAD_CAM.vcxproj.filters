@@ -113,5 +113,7 @@
     <None Include="shader.fs" />
     <None Include="shader_grid.vs" />
     <None Include="shader_grid.fs" />
+    <None Include="shader_bezier_c0.gs" />
+    <None Include="shader_bezier_c0.vs" />
   </ItemGroup>
 </Project>
