@@ -2,7 +2,9 @@
 
 unsigned int BezierC0::counter = 1;
 
-BezierC0::BezierC0(Shader sh) : Object(sh, 7)
+BezierC0::BezierC0(Shader sh) :
+	Object(sh, 7),
+	polygon(std::make_shared<Line>(Line(sh)))
 {
 	shader = Shader("shader_bezier_c0.vs", "shader.fs", "shader_bezier_c0.gs");
 	sprintf_s(name, 512, ("BezierC0 " + std::to_string(counter)).c_str());
@@ -25,6 +27,8 @@ void BezierC0::DrawObject(glm::mat4 mvp_)
 	else {
 		mvp = mvp_;
 	}
+	if (draw_polygon)
+		polygon->DrawObject(mvp_);
 	shader.use();
 	int projectionLoc = glGetUniformLocation(shader.ID, "mvp");
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
@@ -111,6 +115,8 @@ void BezierC0::AddPointToCurve(std::shared_ptr<Point>& point)
 {
 	if (point.get()) {
 		points.push_back(point);
+		polygon->AddPoint(point);
+		point->AddOwner(polygon);
 		update_object();
 	}
 }
@@ -118,6 +124,7 @@ void BezierC0::AddPointToCurve(std::shared_ptr<Point>& point)
 void BezierC0::Update()
 {
 	need_update = true;
+	polygon->Update();
 }
 
 void BezierC0::update_object()
