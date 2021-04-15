@@ -9,7 +9,8 @@ in VS_OUT {
 
 out vec4 ourColor;  
 
-uniform int number;
+uniform float start;
+uniform float end;
 uniform mat4 mvp;
 
 
@@ -56,9 +57,6 @@ void main() {
         EndPrimitive();
         return;
     }
-    int maximum = number;
-    if (maximum > max_verts)
-        maximum = max_verts;
 
     vec3 B0, B1, B2, B3;
 
@@ -67,7 +65,6 @@ void main() {
     B2 = gl_in[2].gl_Position.xyz;
     B3 = gl_in[3].gl_Position.xyz;
 
-    float stride = 1.0f / float(maximum);
     vec3 res;
 
     int number_of_proper_vetrex = 4;
@@ -77,8 +74,10 @@ void main() {
 
     ourColor = gs_in[0].color;
     float t = 0.0f;
-    for (int i = 0; i<=maximum; i++) {
-        t = float(i)/float(maximum);
+    float stride = end - start;
+    stride /= max_verts;
+    for (int i = 0; i<= max_verts; i++) {
+        t = start + i * stride;
         if (number_of_proper_vetrex < 3) {
             res = drawBrezier2(t, B0, B1);
         }

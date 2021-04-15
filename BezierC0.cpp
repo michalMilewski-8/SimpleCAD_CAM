@@ -32,13 +32,21 @@ void BezierC0::DrawObject(glm::mat4 mvp_)
 	shader.use();
 	int projectionLoc = glGetUniformLocation(shader.ID, "mvp");
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(mvp));
-
-	int num = glGetUniformLocation(shader.ID, "number");
-	glUniform1i(num, number_of_divisions);
-
+	float start = 0.0f;
+	float end = 0.0f;
+	int number_of_divisions_greater = std::ceil(number_of_divisions / 120.0f);
+	float stride = 1.0f / number_of_divisions_greater;
 	glBindVertexArray(VAO);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_LINES_ADJACENCY, lines.size(), GL_UNSIGNED_INT, 0);
+	for (int i = 0; i <= number_of_divisions_greater; i++) {
+		start = end;
+		end = start + stride;
+		int startLoc = glGetUniformLocation(shader.ID, "start");
+		int endLoc = glGetUniformLocation(shader.ID, "end");
+		glUniform1f(startLoc, start);
+		glUniform1f(endLoc, end);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawElements(GL_LINES_ADJACENCY, lines.size(), GL_UNSIGNED_INT, 0);
+	}
 	glBindVertexArray(0);
 }
 
@@ -221,24 +229,6 @@ void BezierC0::create_curve()
 	    points_on_curve.push_back(-1.0f);
 	    left--;
 	}
-
-	//if (draw_polygon) {
-	//    int tr = 0;
-	//    for (auto& vec : points_) {
-	//        points_on_curve.push_back(vec.x);
-	//        points_on_curve.push_back(vec.y);
-	//        points_on_curve.push_back(vec.z);
-	//        points_on_curve.push_back(0.0f);
-	//        points_on_curve.push_back(1.0f);
-	//        points_on_curve.push_back(0.0f);
-	//        points_on_curve.push_back(1.0f);
-	//        if (tr != points_.size() - 1) {
-	//            lines.push_back(points_on_curve.size() / (float)description_number - 1);
-	//            lines.push_back(points_on_curve.size() / (float)description_number);
-	//        }
-	//        tr++;
-	//    }
-	//}
 }
 
 glm::vec3 BezierC0::compute_bezier_curve_at_point(int start, int end, float t)
