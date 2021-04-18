@@ -5,6 +5,7 @@ class Point :
 {
 public:
     Point(glm::vec3 position, glm::vec4 color, Shader sh);
+    Point(glm::vec3 position, glm::vec4 color, Shader sh, bool virt);
 
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override;

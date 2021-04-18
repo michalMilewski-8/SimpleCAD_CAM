@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BezierC0.cpp" />
+    <ClCompile Include="BezierC2.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cursor.cpp" />
     <ClCompile Include="imgui.cpp" />
@@ -167,9 +168,12 @@
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="Torus.cpp" />
+    <ClCompile Include="VirtualPoint.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bezier.h" />
     <ClInclude Include="BezierC0.h" />
+    <ClInclude Include="BezierC2.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cursor.h" />
     <ClInclude Include="imconfig.h" />
@@ -185,6 +189,8 @@
     <ClInclude Include="Point.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Torus.h" />
+    <ClInclude Include="Virtual.h" />
+    <ClInclude Include="VirtualPoint.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.fs" />

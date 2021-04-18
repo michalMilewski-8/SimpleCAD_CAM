@@ -30,10 +30,11 @@ void Line::DrawObject(glm::mat4 mvp_)
 	glBindVertexArray(0);
 }
 
-void Line::AddPoint(std::shared_ptr<Point>& point)
+void Line::AddPoint(std::shared_ptr<Point> point)
 {
 	if (point.get()) {
 		points.push_back(point);
+		point->AddOwner(shared_from_this());
 		update_object();
 	}
 }
@@ -41,6 +42,12 @@ void Line::AddPoint(std::shared_ptr<Point>& point)
 void Line::Update()
 {
 	need_update = true;
+}
+
+void Line::DeletePoint(int index)
+{
+	points.erase(points.begin() + index);
+	Update();
 }
 
 void Line::update_object()

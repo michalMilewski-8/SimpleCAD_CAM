@@ -12,10 +12,18 @@ Point::Point(glm::vec3 position, glm::vec4 color, Shader sh):Object(sh,7)
 	MoveObject(position);
 }
 
+Point::Point(glm::vec3 position, glm::vec4 color, Shader sh, bool virt) :Object(sh, 7)
+{
+	this->color = color;
+	update_object();
+	MoveObject(position);
+}
+
 void Point::DrawObject(glm::mat4 mvp)
 {
 	Object::DrawObject(mvp);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPointSize(5);
 	glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }

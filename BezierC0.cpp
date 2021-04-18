@@ -3,7 +3,7 @@
 unsigned int BezierC0::counter = 1;
 
 BezierC0::BezierC0(Shader sh) :
-	Object(sh, 7),
+	Bezier(sh),
 	polygon(std::make_shared<Line>(Line(sh)))
 {
 	shader = Shader("shader_bezier_c0.vs", "shader.fs", "shader_bezier_c0.gs");
@@ -99,6 +99,7 @@ void BezierC0::CreateMenu()
 		}
 		if (to_delete >= 0) {
 			points.erase(points.begin() + to_delete);
+			polygon->DeletePoint(to_delete);
 			Update();
 		}
 
@@ -123,8 +124,8 @@ void BezierC0::AddPointToCurve(std::shared_ptr<Point>& point)
 {
 	if (point.get()) {
 		points.push_back(point);
+		point->AddOwner(shared_from_this());
 		polygon->AddPoint(point);
-		point->AddOwner(polygon);
 		update_object();
 	}
 }

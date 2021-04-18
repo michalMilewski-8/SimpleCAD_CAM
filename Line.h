@@ -1,17 +1,19 @@
 #pragma once
 #include "Object.h"
 #include "Point.h"
-class Line :
-    public Object
+; class Line :
+    public Object,
+    public std::enable_shared_from_this<Line>
 {
 public:
     Line(Shader sh);
 
     void DrawObject(glm::mat4 mvp) override;
-    void CreateMenu() override {}
+    void CreateMenu() override {};
 
-    void AddPoint(std::shared_ptr<Point>& point);
+    void AddPoint(std::shared_ptr<Point> point);
     void Update() override;
+    void DeletePoint(int index);
 
     static unsigned int counter;
 private:

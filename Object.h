@@ -12,14 +12,16 @@
 #include <math.h>
 #include <vector>
 #include <algorithm>
+#include <memory>
 
 #include "Shader.h"
 #include "Camera.h"
 #include "imgui.h"
-
+#include "Virtual.h"
 
 
 class Object
+	
 {
 public:
 	Object(Shader shader_, int number);
@@ -34,6 +36,7 @@ public:
 	void Select();
 	void UnSelect();
 	virtual void Update() {};
+	virtual std::vector<VirtualObject*> GetVirtualObjects() { return std::vector<VirtualObject*>(); };
 
 	static glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
 	

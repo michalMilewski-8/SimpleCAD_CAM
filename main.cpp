@@ -17,6 +17,8 @@
 #include "Torus.h"
 #include "Point.h"
 #include "BezierC0.h"
+#include "BezierC2.h"
+#include "Virtual.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -182,7 +184,7 @@ int main() {
 		glm::vec3 center_point = glm::vec3(0.0f);
 		for (auto& ob : objects_list) {
 			if (ob->selected) {
-				if (std::dynamic_pointer_cast<BezierC0>(ob)) continue;
+				if (std::dynamic_pointer_cast<Bezier>(ob)) continue;
 				number_of_selected++;
 				center_point += ob->GetPosition();
 			}
@@ -457,10 +459,9 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 		for(auto& obj : objects)
 		{
 			if (obj->selected) {
-				auto bez = std::dynamic_pointer_cast<BezierC0>(obj);
+				auto bez = std::dynamic_pointer_cast<Bezier>(obj);
 				if (bez) {
 					bez->AddPointToCurve(point);
-					point->AddOwner(bez);
 				}
 			}
 		}
@@ -476,7 +477,21 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 				auto pt = std::dynamic_pointer_cast<Point>(obj);
 				if (pt) {
 					sh->AddPointToCurve(pt);
-					pt->AddOwner(sh);
+				}
+			}
+		}
+		objects.push_back(sh);
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("BezierC2")) {
+		auto sh = std::make_shared<BezierC2>(BezierC2(ourShader));
+		sh->screen_height = &height_;
+		sh->screen_width = &width_;
+		for (auto& obj : objects) {
+			if (obj->selected) {
+				auto pt = std::dynamic_pointer_cast<Point>(obj);
+				if (pt) {
+					sh->AddPointToCurve(pt);
 				}
 			}
 		}
@@ -485,11 +500,11 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 }
 
 void add_selected_points_to_selected_curve() {
-	std::shared_ptr<BezierC0> bez;
+	std::shared_ptr<Bezier> bez;
 	for (auto& obj : objects_list)
 	{
 		if (obj->selected) {
-			bez = std::dynamic_pointer_cast<BezierC0>(obj);
+			bez = std::dynamic_pointer_cast<Bezier>(obj);
 			if (bez) {
 				break;
 			}
@@ -503,8 +518,9 @@ void add_selected_points_to_selected_curve() {
 		if (obj->selected) {
 			auto point = std::dynamic_pointer_cast<Point>(obj);
 			if (point) {
-				bez->AddPointToCurve(point);
-				point->AddOwner(bez);
+				if (bez) {
+					bez->AddPointToCurve(point);
+				}
 			}
 		}
 	}
