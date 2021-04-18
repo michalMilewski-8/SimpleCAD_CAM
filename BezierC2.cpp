@@ -178,7 +178,19 @@ void BezierC2::update_object()
 	points_on_curve.clear();
 	points_.clear();
 
-	generate_bezier_points();
+	int k = 0;
+	for (auto& pt : de_points_) {
+		while (k < points.size() && points[k].expired()) k++;
+		if (k >= points.size() || pt != points[k].lock()->GetPosition()) {
+			need_new_bezier_generation = true;
+			break;
+		}
+	}
+	if (need_new_bezier_generation) {
+		need_new_bezier_generation = false;
+		generate_bezier_points();
+	}
+		
 
 	position = glm::vec3{ 0,0,0 };
 	int licznik = 0;
@@ -277,7 +289,10 @@ void BezierC2::generate_bezier_points()
 			de_points_.push_back(point.lock()->GetPosition());
 		}
 	}
-	if (de_points_.size() < 4) return;
+	if (de_points_.size() < 4) {
+		need_new_bezier_generation = true;
+		return;
+	}
 	glm::vec3 first_pos = de_points_[0];
 	glm::vec3 second_pos = de_points_[1];
 	glm::vec3 third_pos = de_points_[2];

@@ -39,6 +39,7 @@ private:
 
     bool draw_polygon_bezier;
     bool was_draw_polygon_bezier;
+    bool need_new_bezier_generation{ true };
 
     Shader geom_shader;
 
