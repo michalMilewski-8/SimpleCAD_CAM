@@ -25,6 +25,8 @@ private:
     void create_curve();
     void generate_bezier_points();
     void add_bezier_point(glm::vec3 position);
+    void translate_bezier_movement_to_de_boor(int point_index);
+    Point* get_de_boor_point(int position);
 
     std::shared_ptr<Line> polygon;
     std::shared_ptr<Line> polygon_bezier;

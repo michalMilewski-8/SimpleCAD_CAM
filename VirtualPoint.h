@@ -11,7 +11,13 @@ public:
     static unsigned int counter;
 
     // Inherited via VirtualObject
-    virtual void UnSelectVirt() override;
-    virtual void SelectVirt() override;
+    void UnSelectVirt() override;
+    void SelectVirt() override;
+    glm::vec3 getPosition() override;
+    void MoveVirtObject(glm::vec3) override;
+    void MoveVirtObjectTo(glm::vec3) override;
+
+    // Inherited via VirtualObject
+    bool SelectedVirt() override;
 };
 

@@ -9,8 +9,28 @@ VirtualPoint::VirtualPoint(glm::vec3 position, Shader sh) :
     counter++;
 }
 void VirtualPoint::UnSelectVirt() {
-
+    UnSelect();
 }
 void VirtualPoint::SelectVirt(){
+    Select();
+}
 
+glm::vec3 VirtualPoint::getPosition()
+{
+    return GetPosition();
+}
+
+void VirtualPoint::MoveVirtObject(glm::vec3 pos)
+{
+    MoveObject(pos);
+}
+
+void VirtualPoint::MoveVirtObjectTo(glm::vec3 pos)
+{
+    MoveObjectTo(pos);
+}
+
+bool VirtualPoint::SelectedVirt()
+{
+    return selected;
 }

@@ -236,6 +236,12 @@ void processInput(GLFWwindow* window)
 			{
 				obj->UnSelect();
 			}
+			for (auto& virt : obj->GetVirtualObjects()) {
+				if (virt->SelectedVirt())
+				{
+					virt->UnSelectVirt();
+				}
+			}
 		}
 	}
 }
@@ -287,32 +293,33 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 		auto rotation = Object::RotationBetweenVectors(lookAt - cameraPos, angle2);
 		auto roation = glm::toMat4(rotation);
+		glm::vec3 odn = center.GetPosition();
 		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
 			switch (e) {
 			case 0:
-				auto odn = center.GetPosition();
-				for (auto& obj : objects_list) {
-					if (obj->selected)
-					{
-						obj->RotateObject(rotation);
-						glm::vec4 pos = { obj->GetPosition() - odn, 0.0f };
-						obj->MoveObjectTo(odn + static_cast<glm::vec3>(roation * pos));
-					}
-				}
+				odn = center.GetPosition();
 				break;
 			case 1:
-				auto odn2 = cursor.GetPosition();
-				for (auto& obj : objects_list) {
-					if (obj->selected)
-					{
-						obj->RotateObject(rotation);
-						glm::vec4 pos2 = { obj->GetPosition() - odn2, 0.0f };
-						obj->MoveObjectTo(odn2 + static_cast<glm::vec3>(roation * pos2));
-					}
-				}
+				odn = cursor.GetPosition();
 				break;
 			default:
+				return;
 				break;
+			}
+			for (auto& obj : objects_list) {
+				if (obj->selected)
+				{
+					obj->RotateObject(rotation);
+					glm::vec4 pos = { obj->GetPosition() - odn, 0.0f };
+					obj->MoveObjectTo(odn + static_cast<glm::vec3>(roation * pos));
+				}
+				for (auto& virt : obj->GetVirtualObjects()) {
+					if (virt->SelectedVirt())
+					{
+						glm::vec4 pos2 = { virt->getPosition() - odn, 0.0f };
+						virt->MoveVirtObjectTo(odn + static_cast<glm::vec3>(roation * pos2));
+					}
+				}
 			}
 		}
 
@@ -345,6 +352,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 			for (auto& obj : objects_list) {
 				if (obj->selected)
 					obj->MoveObject(-right_movement + -up_movement);
+				for (auto& virt : obj->GetVirtualObjects()) {
+					if (virt->SelectedVirt())
+						virt->MoveVirtObject(-right_movement + -up_movement);
+				}
 			}
 		}
 		else {
@@ -401,6 +412,20 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				{
 					minLength = length;
 					closest = obj.get();
+				}
+			}
+			for (auto& virt : obj->GetVirtualObjects()) {
+				auto vr_point = dynamic_cast<VirtualPoint*>(virt);
+				if (vr_point) {
+					glm::vec3 point2 = vr_point->GetPosition();
+					glm::vec3 toPoint2(point2 - glm::vec3(lRayStart_world));
+					glm::vec3 crossp2 = glm::cross(lRayDir_world, toPoint2);
+					float length = glm::length(crossp2);
+					if (length < minLength && length < 0.1f)
+					{
+						minLength = length;
+						closest = vr_point;
+					}
 				}
 			}
 		}

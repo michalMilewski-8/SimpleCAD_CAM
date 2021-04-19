@@ -176,7 +176,7 @@ void BezierC2::update_object()
 {
 	lines.clear();
 	points_on_curve.clear();
-	points_.clear();
+	
 
 	int k = 0;
 	for (auto& pt : de_points_) {
@@ -185,13 +185,32 @@ void BezierC2::update_object()
 			need_new_bezier_generation = true;
 			break;
 		}
+		k++;
 	}
+	if( k != points.size()) need_new_bezier_generation = true;
 	if (need_new_bezier_generation) {
 		need_new_bezier_generation = false;
 		generate_bezier_points();
 	}
+	else {
+		k = 0;
+		int moved_point_index = -1;
+		for (auto& pt : points_) {
+			if (k >= bezier_points.size() || pt != bezier_points[k]->getPosition()) {
+				moved_point_index = k;
+				break;
+			}
+			k++;
+		}
+		if (moved_point_index >= 0) {
+			translate_bezier_movement_to_de_boor(moved_point_index);
+			generate_bezier_points();
+			bezier_points[moved_point_index]->Select();
+		}
+	}
 		
 
+	points_.clear();
 	position = glm::vec3{ 0,0,0 };
 	int licznik = 0;
 	for (auto& point : bezier_points) {
@@ -346,4 +365,40 @@ void BezierC2::add_bezier_point(glm::vec3 position)
 	point->AddOwner(shared_from_this());
 	polygon_bezier->AddPoint(point);
 	point->AddOwner(polygon_bezier);
+}
+
+void BezierC2::translate_bezier_movement_to_de_boor(int point_index)
+{
+	int moving_de_boor_point_index = 1 + point_index / 3;
+	Point* moving_de_boor_point = get_de_boor_point(moving_de_boor_point_index);
+	Point* right = get_de_boor_point(moving_de_boor_point_index + 1);
+	if (!moving_de_boor_point || !right) return;
+	glm::vec3 right_pos = right->GetPosition();
+	glm::vec3 sr;
+	glm::vec3 current_bezier_point_pos = bezier_points[point_index]->GetPosition();
+	float multiplication_number = 1.5f;
+
+	if (point_index % 3 == 0) {
+		Point* left = get_de_boor_point(moving_de_boor_point_index - 1);
+		if (!left ) return;
+		glm::vec3 left_pos = left->GetPosition();
+		sr = left_pos + (right_pos - left_pos) / 2.0f;
+	}
+	else {
+		sr = right_pos;
+		if (point_index % 3 == 2) multiplication_number = 3.0f;
+	}
+	glm::vec3 intended_position = sr + (current_bezier_point_pos - sr) * multiplication_number;
+	moving_de_boor_point->MoveObjectTo(intended_position);
+}
+
+Point* BezierC2::get_de_boor_point(int position)
+{
+	int r = 0;
+	for (auto& pt : points) {
+		if (pt.expired()) continue;
+		if (r == position) return pt.lock().get();
+		r++;
+	}
+	return nullptr;
 }
