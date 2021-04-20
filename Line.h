@@ -14,6 +14,7 @@ public:
     void AddPoint(std::shared_ptr<Point> point);
     void Update() override;
     void DeletePoint(int index);
+    void ClearPoints();
 
     static unsigned int counter;
 private:

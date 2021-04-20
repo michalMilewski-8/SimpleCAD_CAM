@@ -50,6 +50,11 @@ void Line::DeletePoint(int index)
 	Update();
 }
 
+void Line::ClearPoints()
+{
+	points.clear();
+}
+
 void Line::update_object()
 {
 	lines.clear();

@@ -119,7 +119,7 @@ void BezierC2::CreateMenu()
 			Update();
 		}
 
-		if (ImGui::CollapsingHeader("Bezier Points on Curve")) {
+		/*if (ImGui::CollapsingHeader("Bezier Points on Curve")) {
 			for (int i = 0; i < bezier_points.size(); i++) {
 				auto sp = bezier_points[i];
 				ImGui::Text(sp->name);
@@ -128,7 +128,7 @@ void BezierC2::CreateMenu()
 					sp->Select();
 				}
 			}
-		}
+		}*/
 
 		ImGui::TreePop();
 		ImGui::Separator();
@@ -303,6 +303,7 @@ void BezierC2::generate_bezier_points()
 {
 	bezier_points.clear();
 	de_points_.clear();
+	polygon_bezier->ClearPoints();
 	for (auto& point : points) {
 		if (!point.expired()) {
 			de_points_.push_back(point.lock()->GetPosition());
@@ -356,6 +357,8 @@ void BezierC2::generate_bezier_points()
 	add_bezier_point(second_point);
 	add_bezier_point(third_point);
 	add_bezier_point(fourth_point);
+
+	bezier_points.shrink_to_fit();
 }
 
 void BezierC2::add_bezier_point(glm::vec3 position)
