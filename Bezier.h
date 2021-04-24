@@ -6,7 +6,7 @@ class Bezier :
     public Object
 {
 public:
-    Bezier(Shader sh) : Object(sh, 7) {};
+    Bezier(Shader& sh) : Object(sh, 7) {};
 
     virtual void AddPointToCurve(std::shared_ptr<Point>& point) {};
 }

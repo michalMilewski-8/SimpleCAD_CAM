@@ -2,9 +2,9 @@
 
 unsigned int BezierC0::counter = 1;
 
-BezierC0::BezierC0(Shader sh) :
+BezierC0::BezierC0(Shader& sh) :
 	Bezier(sh),
-	polygon(std::make_shared<Line>(Line(sh)))
+	polygon(std::make_shared<Line>(sh))
 {
 	shader = Shader("shader_bezier_c0.vs", "shader.fs", "shader_bezier_c0.gs");
 	sprintf_s(name, 512, ("BezierC0 " + std::to_string(counter)).c_str());

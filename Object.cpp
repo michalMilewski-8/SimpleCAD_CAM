@@ -21,7 +21,7 @@ glm::quat Object::RotationBetweenVectors(glm::vec3 start, glm::vec3 dest) {
 
 }
 
-Object::Object(Shader shader_, int number) :
+Object::Object(Shader& shader_, int number) :
 	shader(shader_),
 	description_number(number),
 	translate(glm::mat4(1.0f)),
@@ -37,6 +37,13 @@ Object::Object(Shader shader_, int number) :
 	glGenBuffers(1, &EBO);
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+}
+
+Object::~Object()
+{
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 }
 
 void Object::DrawObject(glm::mat4 mvp_)

@@ -6,7 +6,7 @@
     public std::enable_shared_from_this<Line>
 {
 public:
-    Line(Shader sh);
+    Line(Shader& sh);
 
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override {};

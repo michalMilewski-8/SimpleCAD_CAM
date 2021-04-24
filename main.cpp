@@ -40,7 +40,7 @@ float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 Camera cam;
 Shader ourShader;
-Cursor cursor, center;
+std::unique_ptr<Cursor> cursor, center;
 
 std::vector<std::shared_ptr<Object>> objects_list = {};
 
@@ -117,16 +117,16 @@ int main() {
 	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 1.0f, 20.0f);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
-	objects_list.push_back(std::make_shared<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
+	objects_list.push_back(std::make_shared<Torus>(0.5, 0.1, 10, 10, glm::vec4( 1,1,0,1 ), ourShader));
 	objects_list.back()->screen_height = &height_;
 	objects_list.back()->screen_width = &width_;
 
 	glEnable(GL_DEPTH_TEST);
 
-	cursor = Cursor(ourShader);
-	center = Cursor(ourShader);
+	cursor = std::make_unique<Cursor>(ourShader);
+	center = std::make_unique<Cursor>(ourShader);
 
-	cursor.SetCursorPosition(lookAt);
+	cursor->SetCursorPosition(lookAt);
 	float vertices[] = {
 	  -0.5f, 0.0f, -0.5f,
 	  -0.5f, 0.0f, +0.5f,
@@ -177,7 +177,7 @@ int main() {
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		cursor.DrawObject(mvp);
+		cursor->DrawObject(mvp);
 
 
 		int number_of_selected = 0;
@@ -191,8 +191,8 @@ int main() {
 		}
 		if (number_of_selected > 0) {
 			center_point /= number_of_selected;
-			center.SetCursorPosition(center_point);
-			center.DrawObject(mvp);
+			center->SetCursorPosition(center_point);
+			center->DrawObject(mvp);
 		}
 
 		for (auto& ob : objects_list) {
@@ -215,6 +215,7 @@ int main() {
 
 	glfwTerminate();
 	objects_list.clear();
+	ourShader.deleteShader();
 	return 0;
 }
 
@@ -293,14 +294,14 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 		auto rotation = Object::RotationBetweenVectors(lookAt - cameraPos, angle2);
 		auto roation = glm::toMat4(rotation);
-		glm::vec3 odn = center.GetPosition();
+		glm::vec3 odn = center->GetPosition();
 		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
 			switch (e) {
 			case 0:
-				odn = center.GetPosition();
+				odn = center->GetPosition();
 				break;
 			case 1:
-				odn = cursor.GetPosition();
+				odn = cursor->GetPosition();
 				break;
 			default:
 				return;
@@ -374,7 +375,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 		glm::vec3 right_movement = cam.GetRightVector() * -movement.x;
 		glm::vec3 up_movement = cam.GetUpVector() * movement.y;
-		cursor.MoveObject(right_movement + up_movement);
+		cursor->MoveObject(right_movement + up_movement);
 	}
 
 	mousePosOld = mousePos;
@@ -471,14 +472,14 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starting_pos) {
 	if (ImGui::Button("Torus")) {
-		objects.push_back(std::make_shared<Torus>(Torus(0.5, 0.1, 10, 10, { 1,1,0,1 }, ourShader)));
+		objects.push_back(std::make_shared<Torus>(0.5, 0.1, 10, 10, glm::vec4(1, 1, 0, 1), ourShader));
 		objects.back()->screen_height = &height_;
 		objects.back()->screen_width = &width_;
 		objects.back()->MoveObject(starting_pos);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Point")) {
-		auto point = std::make_shared<Point>(Point(starting_pos, { 1,1,0,1 }, ourShader));
+		auto point = std::make_shared<Point>(starting_pos,glm::vec4( 1,1,0,1 ), ourShader);
 		point->screen_height = &height_;
 		point->screen_width = &width_;
 		for(auto& obj : objects)
@@ -494,7 +495,7 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("BezierC0")) {
-		auto sh = std::make_shared<BezierC0>(BezierC0(ourShader));
+		auto sh = std::make_shared<BezierC0>(ourShader);
 		sh->screen_height = &height_;
 		sh->screen_width = &width_;
 		for (auto& obj : objects) {
@@ -509,7 +510,7 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("BezierC2")) {
-		auto sh = std::make_shared<BezierC2>(BezierC2(ourShader));
+		auto sh = std::make_shared<BezierC2>(ourShader);
 		sh->screen_height = &height_;
 		sh->screen_width = &width_;
 		for (auto& obj : objects) {
@@ -573,7 +574,7 @@ void objects_on_scene_gui() {
 
 void adding_new_objects_gui() {
 	if (ImGui::CollapsingHeader("Add New Objects")) {
-		adding_menu(objects_list, cursor.GetPosition());
+		adding_menu(objects_list, cursor->GetPosition());
 		if (ImGui::Button("Add selected points to curve")) {
 			add_selected_points_to_selected_curve();
 		}
@@ -582,12 +583,12 @@ void adding_new_objects_gui() {
 
 void cursor_position_gui() {
 	ImGui::Text("Cursor Position");
-	auto pos = cursor.GetPosition();
+	auto pos = cursor->GetPosition();
 	ImGui::Text("world Position");
 	ImGui::InputFloat("X", &(pos.x));
 	ImGui::InputFloat("Y", &(pos.y));
 	ImGui::InputFloat("Z", &(pos.z));
-	cursor.SetCursorPosition(pos);
+	cursor->SetCursorPosition(pos);
 	glm::vec4 screen_pos = { pos,1.0f };
 	screen_pos = projection * view * screen_pos;
 	screen_pos /= screen_pos.w;
@@ -605,7 +606,7 @@ void cursor_position_gui() {
 		transform_screen_coordinates_to_world(end, start, real_screenpos.x, real_screenpos.y);
 		glm::vec3 se = end - start;
 		glm::vec3 position = start + se * (glm::dot(-cameraFront, start - lookAt) / glm::dot(-se, -cameraFront));
-		cursor.SetCursorPosition(position);
+		cursor->SetCursorPosition(position);
 	}
 }
 
