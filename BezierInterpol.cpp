@@ -1,22 +1,22 @@
-#include "BezierC2.h"
+#include "BezierInterpol.h"
 
-unsigned int BezierC2::counter = 1;
+unsigned int BezierInterpol::counter = 1;
 
-BezierC2::BezierC2(Shader& sh) :
+BezierInterpol::BezierInterpol(Shader& sh) :
 	Bezier(sh),
 	polygon(std::make_shared<Line>(sh)),
 	polygon_bezier(std::make_shared<Line>(sh)),
 	geom_shader("shader_bezier_c0.vs", "shader.fs", "shader_bezier_c0.gs")
 {
-	sprintf_s(name, 512, ("BezierC2 " + std::to_string(counter)).c_str());
-	constname = "BezierC2 " + std::to_string(counter);
+	sprintf_s(name, 512, ("BezierInterpolated " + std::to_string(counter)).c_str());
+	constname = "BezierInterpolated " + std::to_string(counter);
 	counter++;
 	number_of_divisions = 100;
 	this->color = { 1.0f,1.0f,1.0f,1.0f };
 	update_object();
 }
 
-void BezierC2::DrawObject(glm::mat4 mvp_)
+void BezierInterpol::DrawObject(glm::mat4 mvp_)
 {
 	if (points.size() < 2) return;
 
@@ -35,6 +35,11 @@ void BezierC2::DrawObject(glm::mat4 mvp_)
 	}
 	if (show_bezier_points) {
 		for (auto point : bezier_points) {
+			point->DrawObject(mvp_);
+		}
+	}
+	if (show_de_boor_points) {
+		for (auto point : de_boor_points) {
 			point->DrawObject(mvp_);
 		}
 	}
@@ -60,13 +65,13 @@ void BezierC2::DrawObject(glm::mat4 mvp_)
 	glBindVertexArray(0);
 }
 
-void BezierC2::CreateMenu()
+void BezierInterpol::CreateMenu()
 {
 	float color_new[4];
 	char buffer[512];
 	char buf[512];
 	int to_delete = -1;
-	sprintf_s(buffer, "%s###%sdup2", name, constname);
+	sprintf_s(buffer, "%s###%sdup22", name, constname);
 	if (ImGui::TreeNode(buffer)) {
 
 		if (ImGui::BeginPopupContextItem())
@@ -84,13 +89,14 @@ void BezierC2::CreateMenu()
 			Update();
 			was_selected_in_last_frame = selected;
 		}
-		ImGui::Checkbox("Draw De Bohr Polygon", &draw_polygon);
+		ImGui::Checkbox("Show De Boor Points", &show_de_boor_points);
+		ImGui::Checkbox("Draw De Boor Polygon", &draw_polygon);
 		if (draw_polygon != was_draw_polygon) {
 			Update();
 			was_draw_polygon = draw_polygon;
 		}
 		ImGui::Checkbox("Show Bezier Points", &show_bezier_points);
-		ImGui::Checkbox("Draw Bezier Polygon", &draw_polygon_bezier); 
+		ImGui::Checkbox("Draw Bezier Polygon", &draw_polygon_bezier);
 		if (draw_polygon_bezier != was_draw_polygon_bezier) {
 			Update();
 			was_draw_polygon_bezier = draw_polygon_bezier;
@@ -98,7 +104,7 @@ void BezierC2::CreateMenu()
 		ImGui::Text("Set color:");
 		ImGui::ColorPicker4("Color", color_new);
 
-		if (ImGui::CollapsingHeader("De Bohr Points on Curve")) {
+		if (ImGui::CollapsingHeader("Points on Curve")) {
 			for (int i = 0; i < points.size(); i++) {
 				if (points[i].expired())
 				{
@@ -147,76 +153,48 @@ void BezierC2::CreateMenu()
 	}
 }
 
-void BezierC2::AddPointToCurve(std::shared_ptr<Point>& point)
+void BezierInterpol::AddPointToCurve(std::shared_ptr<Point>& point)
 {
 	if (point.get()) {
 		points.push_back(point);
 		point->AddOwner(shared_from_this());
-		polygon->AddPoint(point);
 		Update();
 	}
 }
 
-void BezierC2::Update()
+void BezierInterpol::Update()
 {
 	need_update = true;
 	polygon->Update();
 	polygon_bezier->Update();
 }
 
-std::vector<VirtualObject*> BezierC2::GetVirtualObjects()
+std::vector<VirtualObject*> BezierInterpol::GetVirtualObjects()
 {
 	auto res = std::vector<VirtualObject*>();
-	for (auto& pt : bezier_points) {
-		res.push_back(pt.get());
-	}
+	// TODO zastanowiæ siê czy coœ zwracaæ
 	return res;
 }
 
-void BezierC2::update_object()
+void BezierInterpol::update_object()
 {
-	lines.clear();
-	points_on_curve.clear();
-	
-
-	int k = 0;
-	for (auto& pt : de_points_) {
-		while (k < points.size() && points[k].expired()) k++;
-		if (k >= points.size() || pt != points[k].lock()->GetPosition()) {
-			need_new_bezier_generation = true;
-			break;
-		}
-		k++;
-	}
-	if( k != points.size()) need_new_bezier_generation = true;
-	if (need_new_bezier_generation) {
-		need_new_bezier_generation = false;
-		generate_bezier_points();
-	}
-	else {
-		k = 0;
-		int moved_point_index = -1;
-		for (auto& pt : points_) {
-			if (k >= bezier_points.size() || pt != bezier_points[k]->getPosition()) {
-				moved_point_index = k;
-				break;
-			}
-			k++;
-		}
-		if (moved_point_index >= 0) {
-			translate_bezier_movement_to_de_boor(moved_point_index);
-			generate_bezier_points();
-			bezier_points[moved_point_index]->Select();
-		}
-	}
-		
-
 	points_.clear();
+	for (auto& point : points) {
+		if (!point.expired()) {
+			points_.push_back(point.lock()->GetPosition());
+		}
+	}
+	// TODO: zrobiæ dobre genereowanie
+	if (points_.size() < 3) return;
+	generate_bezier_points();
+
+	// wrzucanie punktów beziera w nasze punkty do rysowania
+	bezier_points_.clear();
 	position = glm::vec3{ 0,0,0 };
 	int licznik = 0;
 	for (auto& point : bezier_points) {
 		auto sp = point->GetPosition();
-		points_.push_back(sp);
+		bezier_points_.push_back(sp);
 		position += sp;
 		licznik++;
 	}
@@ -239,17 +217,17 @@ void BezierC2::update_object()
 	glEnableVertexAttribArray(1);
 }
 
-void BezierC2::create_curve()
+void BezierInterpol::create_curve()
 {
-
-	for (int iter = 0; iter + 1 < points_.size();) {
+	// Liczenie koniecznej iloœci podzia³ów ¿eby by³o git
+	for (int iter = 0; iter + 1 < bezier_points_.size();) {
 		int start = iter;
 		int end = iter + 1;
-		for (int i = 0; i < 3 && end < points_.size(); i++) { iter++; end++; }
+		for (int i = 0; i < 3 && end < bezier_points_.size(); i++) { iter++; end++; }
 		int number_of_divisions_loc = 1;
 		for (int odl = start; odl < end - 1; odl++) {
-			glm::vec4 A = { points_[odl],1 };
-			glm::vec4 B = { points_[odl + 1],1 };
+			glm::vec4 A = { bezier_points_[odl],1 };
+			glm::vec4 B = { bezier_points_[odl + 1],1 };
 			A = mvp * A;
 			A /= A.w;
 			B = mvp * B;
@@ -269,14 +247,15 @@ void BezierC2::create_curve()
 		if (number_of_divisions_loc > number_of_divisions) number_of_divisions = number_of_divisions_loc;
 	}
 
+	// Wrzucanie punktów beziera, tak by malowaniem zaj¹ siê geometry shader
 	int k = 0;
-	for (k = 0; k < points_.size(); k += 3) {
+	for (k = 0; k < bezier_points_.size(); k += 3) {
 		for (int j = 0; j < 4; j++) {
 			lines.push_back(k + j);
 		}
 	}
 
-	for (auto& vec : points_) {
+	for (auto& vec : bezier_points_) {
 		points_on_curve.push_back(vec.x);
 		points_on_curve.push_back(vec.y);
 		points_on_curve.push_back(vec.z);
@@ -286,7 +265,7 @@ void BezierC2::create_curve()
 		points_on_curve.push_back(color.a);
 	}
 	if (lines.size() == 0) return;
-	int left = (lines.back() - points_.size()) + 1;
+	int left = (lines.back() - bezier_points_.size()) + 1;
 
 	while (left > 0) {
 		points_on_curve.push_back(0.0f);
@@ -300,69 +279,112 @@ void BezierC2::create_curve()
 	}
 }
 
-void BezierC2::generate_bezier_points()
-{
-	bezier_points.clear();
-	de_points_.clear();
-	polygon_bezier->ClearPoints();
-	for (auto& point : points) {
-		if (!point.expired()) {
-			de_points_.push_back(point.lock()->GetPosition());
-		}
-	}
-	if (de_points_.size() < 4) {
-		need_new_bezier_generation = true;
-		return;
-	}
-	glm::vec3 first_pos = de_points_[0];
-	glm::vec3 second_pos = de_points_[1];
-	glm::vec3 third_pos = de_points_[2];
-	glm::vec3 fourth_pos = de_points_[3];
-	glm::vec3 second_point, third_point, fourth_point;
-	glm::vec3 first_vec, second_vec, third_vec; 
-	glm::vec3 helper_fifth;
-	first_vec = second_pos - first_pos;
-	second_vec = third_pos - second_pos;
-	third_vec = fourth_pos - third_pos;
+void change_base(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, float di, glm::vec3& b0, glm::vec3& b1, glm::vec3& b2, glm::vec3& b3) {
+	glm::mat4 base_change_mtx = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f / di, 1.0f / 3.0f, 0, 0,
+		(-di + 2.0f) / di, 2.0f / 3.0f, di * di / 3.0f, 0,
+		-(2.0f * di - 3.0f) / di, 1.0f,di * di,di * di * di
+	};
 
-	third_point = second_pos - (first_vec / 3.0f);
-	helper_fifth = second_pos + (second_vec / 3.0f);
-	fourth_point = third_point + (helper_fifth - third_point) / 2.0f;
-
-	add_bezier_point(fourth_point);
-
-	for (int i = 4; i < de_points_.size(); i++) {
-
-		second_point = helper_fifth;
-		third_point = third_pos - (second_vec / 3.0f);
-		helper_fifth = third_pos + (third_vec / 3.0f);
-		fourth_point = third_point + (helper_fifth- third_point) / 2.0f;
-
-		add_bezier_point(second_point);
-		add_bezier_point(third_point);
-		add_bezier_point(fourth_point);
-
-		third_pos = fourth_pos;
-		fourth_pos = de_points_[i];
-		
-		first_vec = second_vec;
-		second_vec = third_vec;
-		third_vec = fourth_pos - third_pos;
-	}
-
-	second_point = helper_fifth;
-	third_point = third_pos - (second_vec / 3.0f);
-	helper_fifth = third_pos + (third_vec / 3.0f);
-	fourth_point = third_point + (helper_fifth - third_point) / 2.0f;
-
-	add_bezier_point(second_point);
-	add_bezier_point(third_point);
-	add_bezier_point(fourth_point);
-
-	bezier_points.shrink_to_fit();
+	glm::vec4 x, y, z;
+	x = base_change_mtx * glm::vec4{ a.x,b.x,c.x,d.x };
+	y = base_change_mtx * glm::vec4{ a.y,b.y,c.y,d.y };
+	z = base_change_mtx * glm::vec4{ a.z,b.z,c.z,d.z };
+	b0 = { x.x,y.x,z.x };
+	b1 = { x.y,y.y,z.y };
+	b2 = { x.z,y.z,z.z };
+	b3 = { x.w,y.w,z.w };
 }
 
-void BezierC2::add_bezier_point(glm::vec3 position)
+void solve_strip_matrix(const std::vector<float>& a, const std::vector<float>& c, const std::vector<glm::vec3>& d, std::vector<glm::vec3>& x) {
+	std::vector<float> cp = std::vector<float>();
+	std::vector<glm::vec3> dp = std::vector<glm::vec3>();
+	cp.push_back(0);
+	cp.push_back(c[1] / 2.0f);
+	dp.push_back({ 0,0,0 });
+	dp.push_back(d[1] / 2.0f);
+	for (size_t i = 2; i < d.size() - 1; i++) {
+		cp.push_back(c[i] / (2.0f - a[i] * cp[i - 1]));
+	}
+	for (size_t i = 2; i < d.size(); i++) {
+		dp.push_back((d[i] - a[i] * dp[i - 1]) / (2.0f - a[i] * cp[i - 1]));
+	}
+
+	std::vector<glm::vec3> xtmp = std::vector<glm::vec3>();
+	xtmp.push_back(dp.back());
+	for (int i = d.size() - 2; i > 0; i--) {
+		xtmp.push_back(dp[i] - cp[i] * xtmp.back());
+	}
+
+	while (xtmp.size() > 0) {
+		x.push_back(xtmp.back());
+		xtmp.pop_back();
+	}
+}
+
+void BezierInterpol::generate_bezier_points()
+{
+	de_boor_points.clear();
+	de_points_.clear();
+
+	bezier_points.clear();
+
+	polygon_bezier->ClearPoints();
+	polygon->ClearPoints();
+
+	std::vector<glm::vec3> a = std::vector<glm::vec3>();
+	std::vector<glm::vec3> b = std::vector<glm::vec3>();
+	std::vector<glm::vec3> c = std::vector<glm::vec3>();
+	std::vector<glm::vec3> d = std::vector<glm::vec3>();
+	std::vector<float> di = std::vector<float>();
+	std::vector<float> alpha = std::vector<float>();
+	std::vector<float> beta = std::vector<float>();
+	std::vector<glm::vec3> R = std::vector<glm::vec3>();
+
+	for (auto& point : points_) {
+		a.push_back(point);
+	}
+
+	for (size_t i = 0; i < points_.size()-1; i++) {
+		di.push_back(glm::distance(points_[i], points_[i + 1]));
+	}
+
+	alpha.push_back(0);
+	beta.push_back(0);
+	R.push_back({ 0, 0, 0 });
+	for (size_t i = 1; i < points_.size() - 1; i++) {
+		alpha.push_back(di[i - 1] / (di[i - 1] + di[i]));
+		beta.push_back(di[i] / (di[i - 1] + di[i]));
+		R.push_back((((points_[i + 1] - points_[i]) / di[i]) - ((points_[i] - points_[i - 1]) / di[i - 1])) / (di[i - 1] + di[i]));
+	}
+
+	c.push_back({ 0,0,0 });
+	solve_strip_matrix(alpha, beta, R, c);
+	c.push_back({ 0,0,0 });
+
+	for (size_t i = 1; i < points_.size(); i++) {
+		d.push_back((c[i] - c[i - 1]) / (3 * di[i - 1]));
+	}
+	d.push_back({ 0,0,0 });
+
+	for (size_t i = 1; i < points_.size(); i++) {
+		b.push_back((a[i] - a[i-1] - c[i-1]*di[i-1]*di[i-1] - d[i-1] * di[i - 1] * di[i - 1] * di[i - 1]) / di[i - 1]);
+	}
+	b.push_back({ 0,0,0 });
+
+	glm::vec3 b0, b1, b2, b3;
+
+	for (size_t i = 0; i < points_.size() - 1; i++) {
+		change_base(a[i], b[i], c[i], d[i], di[i], b0, b1, b2, b3);
+		add_bezier_point(b0);
+		add_bezier_point(b1);
+		add_bezier_point(b2);
+		add_bezier_point(b3);
+	}
+}
+
+void BezierInterpol::add_bezier_point(glm::vec3 position)
 {
 	auto point = std::make_shared<VirtualPoint>(position, shader);
 	bezier_points.push_back(point);
@@ -371,38 +393,12 @@ void BezierC2::add_bezier_point(glm::vec3 position)
 	point->AddOwner(polygon_bezier);
 }
 
-void BezierC2::translate_bezier_movement_to_de_boor(int point_index)
+void BezierInterpol::add_de_boor_point(glm::vec3 position)
 {
-	int moving_de_boor_point_index = 1 + point_index / 3;
-	Point* moving_de_boor_point = get_de_boor_point(moving_de_boor_point_index);
-	Point* right = get_de_boor_point(moving_de_boor_point_index + 1);
-	if (!moving_de_boor_point || !right) return;
-	glm::vec3 right_pos = right->GetPosition();
-	glm::vec3 sr;
-	glm::vec3 current_bezier_point_pos = bezier_points[point_index]->GetPosition();
-	float multiplication_number = 1.5f;
-
-	if (point_index % 3 == 0) {
-		Point* left = get_de_boor_point(moving_de_boor_point_index - 1);
-		if (!left ) return;
-		glm::vec3 left_pos = left->GetPosition();
-		sr = left_pos + (right_pos - left_pos) / 2.0f;
-	}
-	else {
-		sr = right_pos;
-		if (point_index % 3 == 2) multiplication_number = 3.0f;
-	}
-	glm::vec3 intended_position = sr + (current_bezier_point_pos - sr) * multiplication_number;
-	moving_de_boor_point->MoveObjectTo(intended_position);
+	auto point = std::make_shared<VirtualPoint>(position, shader);
+	de_boor_points.push_back(point);
+	point->AddOwner(shared_from_this());
+	polygon->AddPoint(point);
+	point->AddOwner(polygon);
 }
 
-Point* BezierC2::get_de_boor_point(int position)
-{
-	int r = 0;
-	for (auto& pt : points) {
-		if (pt.expired()) continue;
-		if (r == position) return pt.lock().get();
-		r++;
-	}
-	return nullptr;
-}

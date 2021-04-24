@@ -18,6 +18,7 @@
 #include "Point.h"
 #include "BezierC0.h"
 #include "BezierC2.h"
+#include "BezierInterpol.h"
 #include "Virtual.h"
 
 #include "imgui.h"
@@ -511,6 +512,22 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 	ImGui::SameLine();
 	if (ImGui::Button("BezierC2")) {
 		auto sh = std::make_shared<BezierC2>(ourShader);
+		sh->screen_height = &height_;
+		sh->screen_width = &width_;
+		for (auto& obj : objects) {
+			if (obj->selected) {
+				auto pt = std::dynamic_pointer_cast<Point>(obj);
+				if (pt) {
+					sh->AddPointToCurve(pt);
+				}
+			}
+		}
+		objects.push_back(sh);
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("BezierInterpol")) {
+		auto sh = std::make_shared<BezierInterpol>(ourShader);
 		sh->screen_height = &height_;
 		sh->screen_width = &width_;
 		for (auto& obj : objects) {
