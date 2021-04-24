@@ -24,8 +24,9 @@ class Object
 	
 {
 public:
-	Object(Shader shader_, int number);
+	Object(Shader& shader_, int number);
 	Object() = default;
+	~Object();
 	virtual void DrawObject(glm::mat4 mvp);
 	virtual void CreateMenu() {};
 	void MoveObject(glm::vec3 movement);

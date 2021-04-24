@@ -5,7 +5,7 @@ class Cursor :
 {
 public:
 
-    Cursor(Shader sh);
+    Cursor(Shader& sh);
     Cursor() = default;
     void SetCursorPosition(glm::vec3 position);
     void DrawObject(glm::mat4 mvp) override;

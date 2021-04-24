@@ -8,7 +8,7 @@ class BezierC2 :
     public std::enable_shared_from_this<BezierC2>
 {
 public:
-    BezierC2(Shader sh);
+    BezierC2(Shader& sh);
 
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override;

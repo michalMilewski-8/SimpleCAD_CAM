@@ -1,6 +1,6 @@
 #include "Cursor.h"
 
-Cursor::Cursor(Shader sh) :Object(sh, 7)
+Cursor::Cursor(Shader& sh) :Object(sh, 7)
 {
 	points = {
 		0,0,0,1,0,0,1,

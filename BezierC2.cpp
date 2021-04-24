@@ -2,11 +2,11 @@
 
 unsigned int BezierC2::counter = 1;
 
-BezierC2::BezierC2(Shader sh) :
+BezierC2::BezierC2(Shader& sh) :
 	Bezier(sh),
-	polygon(std::make_shared<Line>(Line(sh))),
-	polygon_bezier(std::make_shared<Line>(Line(sh))),
-	geom_shader(Shader("shader_bezier_c0.vs", "shader.fs", "shader_bezier_c0.gs"))
+	polygon(std::make_shared<Line>(sh)),
+	polygon_bezier(std::make_shared<Line>(sh)),
+	geom_shader("shader_bezier_c0.vs", "shader.fs", "shader_bezier_c0.gs")
 {
 	sprintf_s(name, 512, ("BezierC2 " + std::to_string(counter)).c_str());
 	constname = "BezierC2 " + std::to_string(counter);
@@ -363,7 +363,7 @@ void BezierC2::generate_bezier_points()
 
 void BezierC2::add_bezier_point(glm::vec3 position)
 {
-	auto point = std::make_shared<VirtualPoint>(VirtualPoint(position, shader));
+	auto point = std::make_shared<VirtualPoint>(position, shader);
 	bezier_points.push_back(point);
 	point->AddOwner(shared_from_this());
 	polygon_bezier->AddPoint(point);

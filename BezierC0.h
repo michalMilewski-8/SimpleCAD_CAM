@@ -7,7 +7,7 @@ class BezierC0 :
     public std::enable_shared_from_this<BezierC0>
 {
 public:
-    BezierC0(Shader sh);
+    BezierC0(Shader& sh);
 
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override;
