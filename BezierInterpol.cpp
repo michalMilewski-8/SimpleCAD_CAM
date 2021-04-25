@@ -12,6 +12,7 @@ BezierInterpol::BezierInterpol(Shader& sh) :
 	constname = "BezierInterpolated " + std::to_string(counter);
 	counter++;
 	number_of_divisions = 100;
+	points = std::vector<std::weak_ptr<Point>>();
 	this->color = { 1.0f,1.0f,1.0f,1.0f };
 	update_object();
 }
@@ -121,7 +122,6 @@ void BezierInterpol::CreateMenu()
 		}
 		if (to_delete >= 0) {
 			points.erase(points.begin() + to_delete);
-			polygon->DeletePoint(to_delete);
 			Update();
 		}
 
@@ -219,6 +219,8 @@ void BezierInterpol::update_object()
 
 void BezierInterpol::create_curve()
 {
+	points_on_curve.clear();
+	lines.clear();
 	// Liczenie koniecznej iloœci podzia³ów ¿eby by³o git
 	for (int iter = 0; iter + 1 < bezier_points_.size();) {
 		int start = iter;
@@ -279,12 +281,33 @@ void BezierInterpol::create_curve()
 	}
 }
 
+void scale_bezier_points(float t, glm::vec3& b0, glm::vec3& b1, glm::vec3& b2, glm::vec3& b3) {
+	glm::vec3 l10, l11, l12,
+			  l20, l21,
+			  l30;
+	float tminus = 1.0f - t;
+	l10 = b0 * tminus + b1 * t;
+	l11 = b1 * tminus + b2 * t;
+	l12 = b2 * tminus + b3 * t;
+
+	l20 = l10 * tminus + l11 * t;
+	l21 = l11 * tminus + l12 * t;
+
+	l30 = l20 * tminus + l21 * t;
+
+	b0 = b0;
+	b1 = l10;
+	b2 = l20;
+	b3 = l30;
+}
+
 void change_base(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, float di, glm::vec3& b0, glm::vec3& b1, glm::vec3& b2, glm::vec3& b3) {
+
 	glm::mat4 base_change_mtx = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		1.0f / di, 1.0f / 3.0f, 0, 0,
-		(-di + 2.0f) / di, 2.0f / 3.0f, di * di / 3.0f, 0,
-		-(2.0f * di - 3.0f) / di, 1.0f,di * di,di * di * di
+	1.0f, 1.0f, 1.0f , 1.0f,
+	0 , (1.0f / 3.0f) , (2.0f / 3.0f) , 1.0f,
+	0, 0, (1.0f / 3.0f) , 1.0f,
+	0, 0,0,1.0f
 	};
 
 	glm::vec4 x, y, z;
@@ -295,6 +318,9 @@ void change_base(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, float di, g
 	b1 = { x.y,y.y,z.y };
 	b2 = { x.z,y.z,z.z };
 	b3 = { x.w,y.w,z.w };
+
+	scale_bezier_points(di, b0, b1, b2, b3);
+
 }
 
 void solve_strip_matrix(const std::vector<float>& a, const std::vector<float>& c, const std::vector<glm::vec3>& d, std::vector<glm::vec3>& x) {
@@ -356,7 +382,7 @@ void BezierInterpol::generate_bezier_points()
 	for (size_t i = 1; i < points_.size() - 1; i++) {
 		alpha.push_back(di[i - 1] / (di[i - 1] + di[i]));
 		beta.push_back(di[i] / (di[i - 1] + di[i]));
-		R.push_back((((points_[i + 1] - points_[i]) / di[i]) - ((points_[i] - points_[i - 1]) / di[i - 1])) / (di[i - 1] + di[i]));
+		R.push_back(3.0f*(((points_[i + 1] - points_[i]) / di[i]) - ((points_[i] - points_[i - 1]) / di[i - 1])) / (di[i - 1] + di[i]));
 	}
 
 	c.push_back({ 0,0,0 });
@@ -375,9 +401,14 @@ void BezierInterpol::generate_bezier_points()
 
 	glm::vec3 b0, b1, b2, b3;
 
-	for (size_t i = 0; i < points_.size() - 1; i++) {
+	change_base(a[0], b[0], c[0], d[0], di[0], b0, b1, b2, b3);
+	add_bezier_point(b0);
+	add_bezier_point(b1);
+	add_bezier_point(b2);
+	add_bezier_point(b3);
+
+	for (size_t i = 1; i < points_.size() - 1; i++) {
 		change_base(a[i], b[i], c[i], d[i], di[i], b0, b1, b2, b3);
-		add_bezier_point(b0);
 		add_bezier_point(b1);
 		add_bezier_point(b2);
 		add_bezier_point(b3);

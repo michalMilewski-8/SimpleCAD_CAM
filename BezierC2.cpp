@@ -12,6 +12,7 @@ BezierC2::BezierC2(Shader& sh) :
 	constname = "BezierC2 " + std::to_string(counter);
 	counter++;
 	number_of_divisions = 100;
+	points = std::vector<std::weak_ptr<Point>>();
 	this->color = { 1.0f,1.0f,1.0f,1.0f };
 	update_object();
 }
