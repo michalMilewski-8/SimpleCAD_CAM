@@ -181,7 +181,9 @@ void BezierInterpol::update_object()
 	points_.clear();
 	for (auto& point : points) {
 		if (!point.expired()) {
-			points_.push_back(point.lock()->GetPosition());
+			auto point_ = point.lock()->GetPosition();
+			if(points_.size() == 0 || point_ != points_.back())
+				points_.push_back(point_);
 		}
 	}
 	// TODO: zrobiæ dobre genereowanie
