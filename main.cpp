@@ -39,12 +39,18 @@ glm::mat4 projection_i, view_i, model_i, mvp_i;
 glm::vec2 mousePosOld, angle;
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
+bool stereoscopic = false;
+float ipd = 0.01f;
+float d = 1.0f;
+float near = 0.01f;
+float far = 20.0f;
 Camera cam;
 Shader ourShader;
 std::unique_ptr<Cursor> cursor, center;
 
 std::vector<std::shared_ptr<Object>> objects_list = {};
 
+void draw_scene();
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -100,7 +106,7 @@ int main() {
 	// build and compile our shader program
 	// ------------------------------------
 	ourShader = Shader("shader.vs", "shader.fs"); // you can name your shader files however you like
-	Shader gridShader = Shader("shader_grid.vs", "shader_grid.fs");
+	Shader stereoscopicShader = Shader("stereo.vs", "stereo.fs");
 
 	model = glm::mat4(1.0f);
 	view = glm::mat4(1.0f);
@@ -115,7 +121,7 @@ int main() {
 	height_ = DEFAULT_HEIGHT;
 
 	cam = Camera(cameraPos, cameraFront, cameraUp);
-	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 1.0f, 20.0f);
+	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, near, far);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
 	objects_list.push_back(std::make_shared<Torus>(0.5, 0.1, 10, 10, glm::vec4( 1,1,0,1 ), ourShader));
@@ -128,25 +134,85 @@ int main() {
 	center = std::make_unique<Cursor>(ourShader);
 
 	cursor->SetCursorPosition(lookAt);
-	float vertices[] = {
-	  -0.5f, 0.0f, -0.5f,
-	  -0.5f, 0.0f, +0.5f,
-	  +0.5f, 0.0f, +0.5f,
-	  +0.5f, 0.0f, -0.5f,
+	float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates. NOTE that this plane is now much smaller and at the top of the screen
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f,  -1.0f,  0.0f, 0.0f,
+		 1.0f,  -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f,  -1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f
 	};
 
-	unsigned int VBO, VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	unsigned int quadVAO, quadVBO;
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
+	unsigned int framebufferLeftEye;
+	glGenFramebuffers(1, &framebufferLeftEye);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebufferLeftEye);
+	unsigned int texColorBufferLeftEye;
+	glGenTextures(1, &texColorBufferLeftEye);
+	glBindTexture(GL_TEXTURE_2D, texColorBufferLeftEye);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// attach it to currently bound framebuffer object
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBufferLeftEye, 0);
+	unsigned int rboL;
+	glGenRenderbuffers(1, &rboL);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboL);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width_, height_);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboL);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	unsigned int framebufferRightEye;
+	glGenFramebuffers(1, &framebufferRightEye);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebufferRightEye);
+	unsigned int texColorBufferRightEye;
+	glGenTextures(1, &texColorBufferRightEye);
+	glBindTexture(GL_TEXTURE_2D, texColorBufferRightEye);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// attach it to currently bound framebuffer object
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBufferRightEye, 0);
+
+	auto leftTexLocation = glGetUniformLocation(stereoscopicShader.ID, "screenTextureL");
+	auto rightTexLocation = glGetUniformLocation(stereoscopicShader.ID, "screenTextureR");
+
+	stereoscopicShader.use();
+	glUniform1i(leftTexLocation, 0);
+	glUniform1i(rightTexLocation, 1);
+
+	unsigned int rboR;
+	glGenRenderbuffers(1, &rboR);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboR);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width_, height_);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboR);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -178,26 +244,52 @@ int main() {
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		cursor->DrawObject(mvp);
+		if (stereoscopic) {
+			draw_scene();
+		} else {
+			glm::vec3 posN = cameraPos;
+			glBindFramebuffer(GL_FRAMEBUFFER, framebufferLeftEye);
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+			glEnable(GL_DEPTH_TEST);
+
+			posN -= cam.GetRightVector() * (ipd / 2.0f);
+			cam.LookAt(posN, cameraFront, cameraUp);
+			view = cam.GetViewMatrix();
+			projection = cam.ComputeProjectionMatrix(near, far, -near * ((float)width_ / (float)height_ - ipd) / (2.0f * d), near * ((float)width_ / (float)height_ + ipd) / (2.0f * d), near * 1.0f / (2.0f * d), -near * 1.0f / (2.0f * d));
+			mvp = projection * view;
+			draw_scene();
+
+			glBindFramebuffer(GL_FRAMEBUFFER, framebufferRightEye);
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+			glEnable(GL_DEPTH_TEST);
+
+			posN += cam.GetRightVector() * ipd;
+			cam.LookAt(posN, cameraFront, cameraUp);
+			view = cam.GetViewMatrix();
+			projection = cam.ComputeProjectionMatrix(near, far, -near * ((float)width_ / (float)height_ + ipd) / (2.0f * d), near * ((float)width_ / (float)height_ - ipd) / (2.0f * d), near * 1.0f / (2.0f * d), -near * 1.0f / (2.0f * d));
+			mvp = projection * view;
+			draw_scene();
 
 
-		int number_of_selected = 0;
-		glm::vec3 center_point = glm::vec3(0.0f);
-		for (auto& ob : objects_list) {
-			if (ob->selected) {
-				if (std::dynamic_pointer_cast<Bezier>(ob)) continue;
-				number_of_selected++;
-				center_point += ob->GetPosition();
-			}
-		}
-		if (number_of_selected > 0) {
-			center_point /= number_of_selected;
-			center->SetCursorPosition(center_point);
-			center->DrawObject(mvp);
-		}
+			// second pass
+			glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
 
-		for (auto& ob : objects_list) {
-			ob->DrawObject(mvp);
+			stereoscopicShader.use();
+			glBindVertexArray(quadVAO);
+			glDisable(GL_DEPTH_TEST);
+
+			glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+			glBindTexture(GL_TEXTURE_2D, texColorBufferLeftEye);
+			glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
+			glBindTexture(GL_TEXTURE_2D, texColorBufferRightEye);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			cam.LookAt(cameraPos, cameraFront, cameraUp);
 		}
 
 		// Render dear imgui into screen
@@ -218,6 +310,29 @@ int main() {
 	objects_list.clear();
 	ourShader.deleteShader();
 	return 0;
+}
+
+void draw_scene() {
+	cursor->DrawObject(mvp);
+
+	int number_of_selected = 0;
+	glm::vec3 center_point = glm::vec3(0.0f);
+	for (auto& ob : objects_list) {
+		if (ob->selected) {
+			if (std::dynamic_pointer_cast<Bezier>(ob)) continue;
+			number_of_selected++;
+			center_point += ob->GetPosition();
+		}
+	}
+	if (number_of_selected > 0) {
+		center_point /= number_of_selected;
+		center->SetCursorPosition(center_point);
+		center->DrawObject(mvp);
+	}
+
+	for (auto& ob : objects_list) {
+		ob->DrawObject(mvp);
+	}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -633,12 +748,21 @@ void choosing_point_of_transformation_gui() {
 	ImGui::RadioButton("Cursor position", &e, 1);
 }
 
+void stereoscopic_settings() {
+	if (ImGui::CollapsingHeader("Stereoscopic settings")) {
+		ImGui::Checkbox("Enable Anaglyph", &stereoscopic);
+		ImGui::SliderFloat("Focus Distance", &d, 0.1f, 10.0f);
+		ImGui::SliderFloat("Eye Distance", &ipd, 0.001f, 1.0f);
+	}
+}
+
 void create_gui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	//ImGui::ShowDemoWindow();
 	ImGui::Begin("Main Menu");
+	stereoscopic_settings();
 	cursor_position_gui();
 	choosing_point_of_transformation_gui();
 	adding_new_objects_gui();

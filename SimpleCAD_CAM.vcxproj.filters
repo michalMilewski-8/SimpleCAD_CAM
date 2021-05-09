@@ -145,5 +145,7 @@
     <None Include="shader_grid.fs" />
     <None Include="shader_bezier_c0.gs" />
     <None Include="shader_bezier_c0.vs" />
+    <None Include="stereo.vs" />
+    <None Include="stereo.fs" />
   </ItemGroup>
 </Project>

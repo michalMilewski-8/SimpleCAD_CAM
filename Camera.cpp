@@ -15,6 +15,19 @@ Camera::Camera(glm::vec3 pos, glm::vec3 forward, glm::vec3 up)
 	m_maxDistance = 1000.0f;
 }
 
+glm::mat4 Camera::ComputeProjectionMatrix(float n, float f, float l, float r, float t, float b) const
+{
+	glm::mat4 proj(0.0f) ;
+	proj[0][0] = 2.0f * n / (r - l);
+	proj[1][1] = 2.0f * n / (t - b);
+	proj[2][2] = (f + n) / (f - n);
+	proj[2][0] = (r + l) / (r - l);
+	proj[2][1] = (t + b) / (t - b);
+	proj[3][2] = 2.0f*f*n / (f - n);
+	proj[2][3] = -1.0f;
+	return proj;
+}
+
 void Camera::SetOrthographic(float left, float right, float top, float bottom, float near, float far)
 {
 	glm::mat4 persp = glm::mat4(1.0f);

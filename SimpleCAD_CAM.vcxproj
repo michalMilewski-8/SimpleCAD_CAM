@@ -201,6 +201,8 @@
     <None Include="shader_bezier_c0.vs" />
     <None Include="shader_grid.fs" />
     <None Include="shader_grid.vs" />
+    <None Include="stereo.fs" />
+    <None Include="stereo.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

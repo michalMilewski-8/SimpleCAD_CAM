@@ -14,6 +14,8 @@ public:
 	glm::vec3 GetRightVector() const { return right; };
 	glm::vec3 GetUpVector() const { return up_real; };
 
+	glm::mat4 ComputeProjectionMatrix(float n, float f, float l, float r, float t, float b) const;
+
 	void SetOrthographic(float left, float right, float top, float bottom, float near, float far);
 	void SetPerspective(float fov, float aspect, float near, float far);
 
