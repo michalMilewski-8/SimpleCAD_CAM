@@ -72,6 +72,9 @@
     <ClCompile Include="BezierInterpol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BezierFlakeC0.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -135,6 +138,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BezierInterpol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BezierFlakeC0.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

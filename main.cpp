@@ -19,6 +19,7 @@
 #include "BezierC0.h"
 #include "BezierC2.h"
 #include "BezierInterpol.h"
+#include "BezierFlakeC0.h"
 #include "Virtual.h"
 
 #include "imgui.h"
@@ -40,6 +41,7 @@ glm::vec2 mousePosOld, angle;
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 bool stereoscopic = false;
+bool plain = true;
 float ipd = 0.01f;
 float d = 1.0f;
 float near = 0.01f;
@@ -655,6 +657,25 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 		}
 		objects.push_back(sh);
 	}
+
+	if (ImGui::CollapsingHeader("BezierFlakeC0")) {
+		static int planar = 0;
+		ImGui::RadioButton("plain", &planar, 0);
+		ImGui::RadioButton("barrel", &planar, 1);
+		static float dimensions[2] = { 1,1 };
+		if (planar == 0) {
+			ImGui::InputFloat2("set width and height of the plane",dimensions);
+		}
+		else {
+			ImGui::InputFloat2("set radius and height of the barell", dimensions);
+		}
+		static int patches[2] = { 1,1 };
+		ImGui::DragInt2("Set number of patches in u and v dimensions", patches,0.5f, 1, 100);
+		if (ImGui::Button("Create flake!!!")) {
+			objects.push_back(std::make_shared<BezierFlakeC0>(ourShader,planar,glm::uvec2(patches[0], patches[1]), glm::vec2(dimensions[0], dimensions[1])));
+		}
+	}
+
 }
 
 void add_selected_points_to_selected_curve() {
