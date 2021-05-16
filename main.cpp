@@ -244,7 +244,7 @@ int main() {
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		if (stereoscopic) {
+		if (!stereoscopic) {
 			draw_scene();
 		} else {
 			glm::vec3 posN = cameraPos;

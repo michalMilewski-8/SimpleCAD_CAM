@@ -11,7 +11,7 @@ void main()
     vec4 FragColorL = texture(screenTextureL, TexCoords);
     vec4 FragColorR = texture(screenTextureR, TexCoords);
 
-    FragColor = FragColorR;
-    FragColor.x = FragColorL.x;
+    FragColor = FragColorL;
+    FragColor.x = FragColorR.x;
 
 }
