@@ -13,8 +13,11 @@ public:
         sprintf_s(name, 512, ("BezierFlakeC0 " + std::to_string(counter)).c_str());
         constname = "BezierFlakeC0 " + std::to_string(counter);
         counter++;
+        number_of_divisions[0] = 4;
+        number_of_divisions[1] = 4;
         this->color = { 1.0f,1.0f,1.0f,1.0f };
         update_object();
+        shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader.tes");
     }
 
     void DrawObject(glm::mat4 mvp) override;
@@ -37,8 +40,7 @@ private:
     std::vector<float> points_on_curve;
     std::vector<unsigned int> patches;
 
-    int number_of_divisions_u;
-    int number_of_divisions_v;
+    int number_of_divisions[2];
     bool draw_polygon;
     bool was_draw_polygon;
 

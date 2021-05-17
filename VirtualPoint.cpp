@@ -30,7 +30,32 @@ void VirtualPoint::MoveVirtObjectTo(glm::vec3 pos)
     MoveObjectTo(pos);
 }
 
+void VirtualPoint::AddOwner(Object* owner)
+{
+    ownerss.push_back(owner);
+}
+
 bool VirtualPoint::SelectedVirt()
 {
     return selected;
+}
+
+void VirtualPoint::AddOwner(std::shared_ptr<Object> owner)
+{
+    owners.push_back(owner);
+}
+
+void VirtualPoint::inform_owner_of_change()
+{
+    for (auto& owner : owners) {
+        if (!owner.expired()) {
+            auto o = owner.lock();
+            o->Update();
+        }
+    }
+
+    for (auto& owner : ownerss) {
+        owner->Update();
+    }
+
 }

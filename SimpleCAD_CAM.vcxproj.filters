@@ -153,5 +153,9 @@
     <None Include="shader_bezier_c0.vs" />
     <None Include="stereo.vs" />
     <None Include="stereo.fs" />
+    <None Include="tes_shader.vs" />
+    <None Include="tes_shader.fs" />
+    <None Include="tes_shader.tcs" />
+    <None Include="tes_shader.tes" />
   </ItemGroup>
 </Project>

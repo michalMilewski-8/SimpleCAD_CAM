@@ -16,7 +16,7 @@ public:
 private:
     void update_object() override;
     void inform_owner_of_change() override;
-
+protected:
     std::vector<std::weak_ptr<Object>> owners = {};
 
 };

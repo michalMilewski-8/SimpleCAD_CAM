@@ -205,6 +205,10 @@
     <None Include="shader_grid.vs" />
     <None Include="stereo.fs" />
     <None Include="stereo.vs" />
+    <None Include="tes_shader.fs" />
+    <None Include="tes_shader.tcs" />
+    <None Include="tes_shader.tes" />
+    <None Include="tes_shader.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

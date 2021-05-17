@@ -65,8 +65,8 @@ void create_gui();
 
 int main() {
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
@@ -215,7 +215,7 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 0, glm::uvec2(1, 1), glm::vec2(1, 1)));
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -245,6 +245,10 @@ int main() {
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+		GLint data;
+		glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &data);
+
+		
 
 		if (!stereoscopic) {
 			draw_scene();
@@ -273,6 +277,7 @@ int main() {
 			projection = cam.ComputeProjectionMatrix(near, far, -near * ((float)width_ / (float)height_ + ipd) / (2.0f * d), near * ((float)width_ / (float)height_ - ipd) / (2.0f * d), near * 1.0f / (2.0f * d), -near * 1.0f / (2.0f * d));
 			mvp = projection * view;
 			draw_scene();
+
 
 
 			// second pass
@@ -673,6 +678,7 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 		ImGui::DragInt2("Set number of patches in u and v dimensions", patches,0.5f, 1, 100);
 		if (ImGui::Button("Create flake!!!")) {
 			objects.push_back(std::make_shared<BezierFlakeC0>(ourShader,planar,glm::uvec2(patches[0], patches[1]), glm::vec2(dimensions[0], dimensions[1])));
+			
 		}
 	}
 
