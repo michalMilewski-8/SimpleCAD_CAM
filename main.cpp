@@ -44,7 +44,7 @@ bool stereoscopic = false;
 bool plain = true;
 float ipd = 0.01f;
 float d = 1.0f;
-float near = 0.01f;
+float near = 0.001f;
 float far = 20.0f;
 Camera cam;
 Shader ourShader;
@@ -345,7 +345,7 @@ void draw_scene() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-	cam.SetPerspective(glm::radians(45.0f), width / (float)height, 1.0f, 20.0f);
+	cam.SetPerspective(glm::radians(45.0f), width / (float)height, near, far);
 	width_ = width;
 	height_ = height;
 }
