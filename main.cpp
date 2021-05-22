@@ -20,6 +20,7 @@
 #include "BezierC2.h"
 #include "BezierInterpol.h"
 #include "BezierFlakeC0.h"
+#include "BezierFlakeC2.h"
 #include "Virtual.h"
 
 #include "imgui.h"
@@ -109,6 +110,7 @@ int main() {
 	// ------------------------------------
 	ourShader = Shader("shader.vs", "shader.fs"); // you can name your shader files however you like
 	Shader stereoscopicShader = Shader("stereo.vs", "stereo.fs");
+	Shader gridShader = Shader("shader_grid.vs", "shader_grid.fs");
 
 	model = glm::mat4(1.0f);
 	view = glm::mat4(1.0f);
@@ -215,7 +217,7 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 0, glm::uvec2(1, 1), glm::vec2(1, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -466,7 +468,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
 		glm::vec2 diff = (mousePosOld - mousePos) * PRECISION;
-		float cameraSpeed = 0.4f * deltaTime;
+		float cameraSpeed = 0.1f * deltaTime;
 
 		glm::vec2 movement = diff * cameraSpeed;
 
@@ -679,6 +681,25 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 		if (ImGui::Button("Create flake!!!")) {
 			objects.push_back(std::make_shared<BezierFlakeC0>(ourShader,planar,glm::uvec2(patches[0], patches[1]), glm::vec2(dimensions[0], dimensions[1])));
 			
+		}
+	}
+
+	if (ImGui::CollapsingHeader("BezierFlakeC2")) {
+		static int planar = 0;
+		ImGui::RadioButton("plain", &planar, 0);
+		ImGui::RadioButton("barrel", &planar, 1);
+		static float dimensions[2] = { 1,1 };
+		if (planar == 0) {
+			ImGui::InputFloat2("set width and height of the plane", dimensions);
+		}
+		else {
+			ImGui::InputFloat2("set radius and height of the barell", dimensions);
+		}
+		static int patches[2] = { 1,1 };
+		ImGui::DragInt2("Set number of patches in u and v dimensions", patches, 0.5f, 1, 100);
+		if (ImGui::Button("Create flake!!!")) {
+			objects.push_back(std::make_shared<BezierFlakeC2>(ourShader, planar, glm::uvec2(patches[0], patches[1]), glm::vec2(dimensions[0], dimensions[1])));
+
 		}
 	}
 

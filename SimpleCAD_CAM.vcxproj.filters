@@ -75,6 +75,9 @@
     <ClCompile Include="BezierFlakeC0.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BezierFlakeC2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -143,6 +146,9 @@
     <ClInclude Include="BezierFlakeC0.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BezierFlakeC2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.vs" />
@@ -157,5 +163,6 @@
     <None Include="tes_shader.fs" />
     <None Include="tes_shader.tcs" />
     <None Include="tes_shader.tes" />
+    <None Include="tes_shader_C2.tes" />
   </ItemGroup>
 </Project>

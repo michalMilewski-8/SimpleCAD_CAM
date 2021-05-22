@@ -11,8 +11,8 @@ public:
 	glm::mat4 GetViewMatrix() const { return m_view_matrix; }
 	glm::mat4 GetWorldModelMatrix() const { return m_world_model_matrix; }
 	glm::mat4 GetProjectionMatrix() const { return m_projection_matrix; };
-	glm::vec3 GetRightVector() const { return right; };
-	glm::vec3 GetUpVector() const { return up_real; };
+	glm::vec3 GetRightVector() const { return glm::normalize(right); };
+	glm::vec3 GetUpVector() const { return glm::normalize(up_real); };
 
 	glm::mat4 ComputeProjectionMatrix(float n, float f, float l, float r, float t, float b) const;
 

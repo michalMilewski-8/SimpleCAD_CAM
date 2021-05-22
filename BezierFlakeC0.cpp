@@ -111,82 +111,43 @@ void BezierFlakeC0::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 		float stridey = sizes.y / (flakes_count.y * 3);
 		for (int i = 0; i < flakes_count.x * 3 + 1; i++) {
 			float xpos = i * stridex;
+			polygons.push_back(std::make_shared<Line>(shader));
 			for (int j = 0; j < flakes_count.y * 3 + 1; j++) {
 				float ypos = j * stridey;
 				auto point = std::make_shared<VirtualPoint>(glm::vec3(xpos, 0.0f, ypos), shader);
 				point->AddOwner(this);
 				points.push_back(point);
+				if (i == 0) {
+					polygons.push_back(std::make_shared<Line>(shader));
+					polygons[0]->AddPoint(point);
+				}
+				else {
+					polygons.back()->AddPoint(point);
+				}
+				polygons[j + 1]->AddPoint(point);
 			}
 		}
 		for (int i = 0; i < flakes_count.x; i++) {
-
 			for (int j = 0; j < flakes_count.y; j++) {
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 0);
-				polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 1);
-				polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 2);
-				polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 3);
-				polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
 
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 0);
-				polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 1);
-				polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 2);
-				polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 3);
-				polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
 
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 0);
-				polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 1);
-				polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 2);
-				polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 3);
-				polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
 
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 0);
-				polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 1);
-				polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 2);
-				polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 3);
-				polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
-
-
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 0]);
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 1]);
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 2]);
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 3]);
-
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 0]);
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 1]);
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 2]);
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 3]);
-
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 0]);
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 1]);
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 2]);
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 3]);
-
-				polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 0]);
-				polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 1]);
-				polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 2]);
-				polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 3]);
 			}
 		}
 
@@ -198,95 +159,54 @@ void BezierFlakeC0::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 		for (int i = 0; i < flakes_count.x * 3; i++) {
 			float xpos = sizes.x * std::cos(i * stridex);
 			float ypos = sizes.x * std::sin(i * stridex);
+			polygons.push_back(std::make_shared<Line>(shader));
 			for (int j = 0; j < flakes_count.y * 3 + 1; j++) {
 				float zpos = j * stridez;
 				auto point = std::make_shared<VirtualPoint>(glm::vec3(xpos, ypos, zpos), shader);
 				point->AddOwner(this);
 				points.push_back(point);
+				if (i == 0) {
+					polygons.push_back(std::make_shared<Line>(shader));
+					polygons[0]->AddPoint(point);
+				}
+				else {
+					polygons.back()->AddPoint(point);
+				}
+				polygons[j + 1]->AddPoint(point);
 			}
+		}
+		for (int j = 0; j < flakes_count.y * 3 + 1; j++) {
+			polygons[j + 1]->AddPoint(points[j]);
 		}
 		for (int i = 0; i < flakes_count.x; i++) {
 
 			for (int j = 0; j < flakes_count.y; j++) {
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 0);
-				polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 1);
-				polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 2);
-				polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * 3 * i + 3 * j + 3);
-				polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
 
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 0);
-				polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 1);
-				polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 2);
-				polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 3);
-				polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
 
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 0);
-				polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 1);
-				polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 2);
-				polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 				patches.push_back((3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 3);
-				polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
 
 				if (i != flakes_count.x - 1) {
 					patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 0);
-					polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 					patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 1);
-					polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 					patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 2);
-					polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 					patches.push_back((3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 3);
-					polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
 				}
 				else {
 					patches.push_back(3 * j + 0);
-					polygons[polygons.size() - 4]->AddPoint(points[patches.back()]);
 					patches.push_back(3 * j + 1);
-					polygons[polygons.size() - 3]->AddPoint(points[patches.back()]);
 					patches.push_back(3 * j + 2);
-					polygons[polygons.size() - 2]->AddPoint(points[patches.back()]);
 					patches.push_back(3 * j + 3);
-					polygons[polygons.size() - 1]->AddPoint(points[patches.back()]);
-				}
-
-
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-				polygons.push_back(std::make_shared<Line>(shader));
-
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 0]);
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 1]);
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 2]);
-				polygons[polygons.size() - 4]->AddPoint(points[(3 * flakes_count.y + 1) * 3 * i + 3 * j + 3]);
-
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 0]);
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 1]);
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 2]);
-				polygons[polygons.size() - 3]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 1) + 3 * j + 3]);
-
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 0]);
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 1]);
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 2]);
-				polygons[polygons.size() - 2]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 2) + 3 * j + 3]);
-
-				if (i != flakes_count.x - 1) {
-					polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 0]);
-					polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 1]);
-					polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 2]);
-					polygons[polygons.size() - 1]->AddPoint(points[(3 * flakes_count.y + 1) * (3 * i + 3) + 3 * j + 3]);
 				}
 			}
 		}

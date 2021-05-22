@@ -154,6 +154,7 @@
     <ClCompile Include="BezierC0.cpp" />
     <ClCompile Include="BezierC2.cpp" />
     <ClCompile Include="BezierFlakeC0.cpp" />
+    <ClCompile Include="BezierFlakeC2.cpp" />
     <ClCompile Include="BezierInterpol.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cursor.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="BezierC0.h" />
     <ClInclude Include="BezierC2.h" />
     <ClInclude Include="BezierFlakeC0.h" />
+    <ClInclude Include="BezierFlakeC2.h" />
     <ClInclude Include="BezierInterpol.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cursor.h" />
@@ -209,6 +211,7 @@
     <None Include="tes_shader.tcs" />
     <None Include="tes_shader.tes" />
     <None Include="tes_shader.vs" />
+    <None Include="tes_shader_C2.tes" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
