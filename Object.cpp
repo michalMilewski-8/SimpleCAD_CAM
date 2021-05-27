@@ -156,6 +156,18 @@ void Object::UnSelect()
 	}
 }
 
+void Object::SetName(std::string name_)
+{
+	constname = name_;
+	sprintf_s(name, 512, constname.c_str());
+}
+
+bool Object::CompareName(std::string name_)
+{
+	if (constname.compare(name_) == 0 ) return true;
+	return false;
+}
+
 glm::vec3 Object::GetPosition()
 {
 	return position;

@@ -36,6 +36,8 @@ public:
 	void ResizeObject(glm::vec3 movement);
 	void Select();
 	void UnSelect();
+	void SetName(std::string name_);
+	bool CompareName(std::string name_);
 	virtual void Update() {};
 	virtual std::vector<VirtualObject*> GetVirtualObjects() { return std::vector<VirtualObject*>(); };
 
@@ -48,6 +50,9 @@ public:
 
 	bool selected;
 	char name[512];
+
+	std::string constname;
+
 protected:
 	virtual void update_object() {};
 	virtual void inform_owner_of_change() {};
@@ -55,7 +60,6 @@ protected:
 	unsigned int VAO;
 	unsigned int EBO;
 	
-	std::string constname;
 
 	bool was_selected_in_last_frame{false};
 	bool need_update{ false };

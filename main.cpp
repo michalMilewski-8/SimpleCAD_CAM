@@ -27,10 +27,15 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "Dependencies/include/rapidxml-1.13/rapidxml.hpp"
+//#include "./Dependencies/include/ImGuiFileDialog-Lib_Only/ImGuiFileDialog.h"
+
 #define DEFAULT_WIDTH 1280
 #define DEFAULT_HEIGHT 720
 #define EPS 0.1
 #define PRECISION 1.0f
+using namespace rapidxml;
+using namespace std;
 
 glm::vec3 cameraPos, cameraFront, cameraUp, lookAt, moving_up;
 unsigned int width_, height_;
@@ -235,22 +240,11 @@ int main() {
 		processInput(window);
 		create_gui();
 
-		//int projectionLoc = glGetUniformLocation(gridShader.ID, "proj");
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-		//int viewLoc = glGetUniformLocation(gridShader.ID, "vieww");
-		//glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-		//gridShader.use();
-		//glBindVertexArray(VAO);
-		//glDrawArrays(GL_QUADS, 0, 4);
-
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		GLint data;
 		glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &data);
-
-		
 
 		if (!stereoscopic) {
 			draw_scene();
@@ -279,8 +273,6 @@ int main() {
 			projection = cam.ComputeProjectionMatrix(near, far, -near * ((float)width_ / (float)height_ + ipd) / (2.0f * d), near * ((float)width_ / (float)height_ - ipd) / (2.0f * d), near * 1.0f / (2.0f * d), -near * 1.0f / (2.0f * d));
 			mvp = projection * view;
 			draw_scene();
-
-
 
 			// second pass
 			glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
@@ -804,12 +796,143 @@ void stereoscopic_settings() {
 	}
 }
 
+void main_menu() {
+	// Menu Bar
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("Menu##main"))
+		{
+			if (ImGui::MenuItem("Open##main", "Ctrl+O")) {
+				std::vector<std::string> node_names = {};
+				std::vector<std::shared_ptr<Object>> objects_in_file = {};
+				std::string file_to_open = "C:\\Users\\miles\\Desktop\\MG_CC_sem_1\\MG-1\\laby\\SimpleCAD_CAM\\x64\\Debug\\example.txt";
+				//std::string file_to_open = ".\\example.txt";
+				xml_document<> doc;
+				xml_node<>* root_node;
+				// Read the xml file into a vector
+				ifstream theFile(file_to_open);
+				vector<char> buffer((istreambuf_iterator<char>(theFile)), istreambuf_iterator<char>());
+				buffer.push_back('\0');
+				// Parse the buffer using the xml file parsing library into doc 
+				doc.parse<0>(&buffer[0]);
+				// Find our root node
+				root_node = doc.first_node("Scene");
+				for (xml_node<>* point_node = root_node->first_node("Point"); point_node; point_node = point_node->next_sibling("Point"))
+				{
+					auto position = point_node->first_node("Position");
+					glm::vec3 pos = glm::vec3(std::atof(position->first_attribute("X")->value()),
+						std::atof(position->first_attribute("Y")->value()),
+						std::atof(position->first_attribute("Z")->value()));
+					auto point = make_shared<Point>(pos, glm::vec4(1, 1, 1, 1), ourShader);
+					point->SetName(point_node->first_attribute("Name")->value());
+					objects_in_file.push_back(point);
+				}
+
+				for (xml_node<>* object_node = root_node->first_node(); object_node; object_node = object_node->next_sibling())
+				{
+					std::string node_type = object_node->name();
+					if (node_type == "Point") continue;
+
+					if (node_type == "Torus") {
+						float R = std::atof(object_node->first_attribute("MajorRadius")->value());
+						float r = std::atof(object_node->first_attribute("MinorRadius")->value());
+						int H = std::atoi(object_node->first_attribute("MajorSegments")->value());
+						int h = std::atoi(object_node->first_attribute("MinorSegments")->value());
+						auto position = object_node->first_node("Position");
+						glm::vec3 pos = glm::vec3(std::atof(position->first_attribute("X")->value()),
+							std::atof(position->first_attribute("Y")->value()),
+							std::atof(position->first_attribute("Z")->value()));
+						auto rotation = object_node->first_node("Position");
+						glm::quat rot = glm::quat(std::atof(rotation->first_attribute("X")->value()),
+							std::atof(rotation->first_attribute("Y")->value()),
+							std::atof(rotation->first_attribute("Z")->value()),
+							std::atof(rotation->first_attribute("W")->value()));
+						auto scale = object_node->first_node("Position");
+						glm::vec3 sc = glm::vec3(std::atof(scale->first_attribute("X")->value()),
+							std::atof(scale->first_attribute("Y")->value()),
+							std::atof(scale->first_attribute("Z")->value()));
+						auto object = std::make_shared<Torus>(R,r,H,h,glm::vec4(1,1,1,1),ourShader);
+						object->MoveObjectTo(pos);
+						object->RotateObject(rot);
+						object->ResizeObject(sc);
+						objects_in_file.push_back(object);
+					}
+					else if (node_type == "BezierC0") {
+						auto object = std::make_shared<BezierC0>(ourShader);
+						auto points_list = object_node->first_node("Points");
+						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = points_list->next_sibling("PointRef")) {
+							string ref = point_node->first_attribute("Name")->value();
+							for (const auto& obj : objects_in_file) {
+								if (obj->CompareName(ref)) {
+									auto point = std::dynamic_pointer_cast<Point>(obj);
+									object->AddPointToCurve(point);
+									break;
+								}
+							}
+						}
+						object->screen_height = &height_;
+						object->screen_width = &width_;
+						objects_in_file.push_back(object);
+					}
+					else if (node_type == "BezierC2") {
+						auto object = std::make_shared<BezierC2>(ourShader);
+						auto points_list = object_node->first_node("Points");
+						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = point_node->next_sibling("PointRef")) {
+							string ref = point_node->first_attribute("Name")->value();
+							for (const auto& obj : objects_in_file) {
+								if (obj->CompareName(ref)) {
+									auto point = std::dynamic_pointer_cast<Point>(obj);
+									object->AddPointToCurve(point);
+									break;
+								}
+							}
+						}
+						object->screen_height = &height_;
+						object->screen_width = &width_;
+						objects_in_file.push_back(object);
+					}
+					else if (node_type == "BezierInter") {
+						auto object = std::make_shared<BezierInterpol>(ourShader);
+						auto points_list = object_node->first_node("Points");
+						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = points_list->next_sibling("PointRef")) {
+							string ref = point_node->first_attribute("Name")->value();
+							for (const auto& obj : objects_in_file) {
+								if (obj->CompareName(ref)) {
+									auto point = std::dynamic_pointer_cast<Point>(obj);
+									object->AddPointToCurve(point);
+									break;
+								}
+							}
+						}
+						object->screen_height = &height_;
+						object->screen_width = &width_;
+						objects_in_file.push_back(object);
+					}
+					else if (node_type == "PatchC0") {
+
+					}
+					else if (node_type == "PatchC2") {
+
+					}
+				}
+				objects_list.insert(objects_list.end(), objects_in_file.begin(), objects_in_file.end());
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+}
+
 void create_gui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-	//ImGui::ShowDemoWindow();
-	ImGui::Begin("Main Menu");
+	ImGui::ShowDemoWindow();
+	bool open;
+	ImGuiWindowFlags flags = 0;
+	flags |= ImGuiWindowFlags_MenuBar;
+	ImGui::Begin("Main Menu##uu", &open, flags);
+	main_menu();
 	stereoscopic_settings();
 	cursor_position_gui();
 	choosing_point_of_transformation_gui();
