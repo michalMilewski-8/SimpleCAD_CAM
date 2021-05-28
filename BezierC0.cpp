@@ -136,6 +136,23 @@ void BezierC0::Update()
 	polygon->Update();
 }
 
+void BezierC0::Serialize(xml_document<>& document, xml_node<>* scene)
+{
+	auto figure = document.allocate_node(node_element, "BezierC0");
+	figure->append_attribute(document.allocate_attribute("Name", document.allocate_string(constname.c_str())));
+	auto pointsNode = document.allocate_node(node_element, "Points");
+	for (auto& point : points) {
+		if (!point.expired()) {
+			auto point_rel = point.lock();
+			auto pointRef = document.allocate_node(node_element, "PointRef");
+			pointRef->append_attribute(document.allocate_attribute("Name", document.allocate_string(point_rel->constname.c_str())));
+			pointsNode->append_node(pointRef);
+		}
+	}
+	figure->append_node(pointsNode);
+	scene->append_node(figure);
+}
+
 void BezierC0::update_object()
 {
 	lines.clear();

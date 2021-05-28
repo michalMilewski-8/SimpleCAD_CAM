@@ -174,6 +174,23 @@ std::vector<Object*> BezierC2::GetVirtualObjects()
 	return res;
 }
 
+void BezierC2::Serialize(xml_document<>& document, xml_node<>* scene)
+{
+	auto figure = document.allocate_node(node_element, "BezierC2");
+	figure->append_attribute(document.allocate_attribute("Name", document.allocate_string(constname.c_str())));
+	auto pointsNode = document.allocate_node(node_element, "Points");
+	for (auto& point : points) {
+		if (!point.expired()) {
+			auto point_rel = point.lock();
+			auto pointRef = document.allocate_node(node_element, "PointRef");
+			pointRef->append_attribute(document.allocate_attribute("Name", document.allocate_string(point_rel->constname.c_str())));
+			pointsNode->append_node(pointRef);
+		}
+	}
+	figure->append_node(pointsNode);
+	scene->append_node(figure);
+}
+
 void BezierC2::update_object()
 {
 	lines.clear();

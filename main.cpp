@@ -28,6 +28,8 @@
 #include "imgui_impl_opengl3.h"
 
 #include "Dependencies/include/rapidxml-1.13/rapidxml.hpp"
+#include "Dependencies/include/rapidxml-1.13/rapidxml_print.hpp"
+#include "Dependencies/include/rapidxml-1.13/rapidxml_utils.hpp"
 //#include "./Dependencies/include/ImGuiFileDialog-Lib_Only/ImGuiFileDialog.h"
 
 #define DEFAULT_WIDTH 1280
@@ -222,7 +224,7 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -805,8 +807,8 @@ void main_menu() {
 			if (ImGui::MenuItem("Open##main", "Ctrl+O")) {
 				std::vector<std::string> node_names = {};
 				std::vector<std::shared_ptr<Object>> objects_in_file = {};
-				std::string file_to_open = "C:\\Users\\miles\\Desktop\\MG_CC_sem_1\\MG-1\\laby\\SimpleCAD_CAM\\x64\\Debug\\example.txt";
-				//std::string file_to_open = ".\\example.txt";
+				//std::string file_to_open = "C:\\Users\\miles\\Desktop\\MG_CC_sem_1\\MG-1\\laby\\SimpleCAD_CAM\\x64\\Debug\\example.txt";
+				std::string file_to_open = "example.txt";
 				xml_document<> doc;
 				xml_node<>* root_node;
 				// Read the xml file into a vector
@@ -967,6 +969,19 @@ void main_menu() {
 					}
 				}
 				objects_list.insert(objects_list.end(), objects_in_file.begin(), objects_in_file.end());
+			}
+			if (ImGui::MenuItem("Save##main", "Ctrl+O")) {
+				xml_document<char> document;
+				xml_node<>* scene = document.allocate_node(node_element, "Scene");
+				for (auto& obj : objects_list) {
+					obj->Serialize(document, scene);
+				}
+				document.append_node(scene);
+
+				ofstream myfile;
+				myfile.open("example.txt");
+				myfile << document;
+				myfile.close();
 			}
 			ImGui::EndMenu();
 		}

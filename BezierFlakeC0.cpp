@@ -17,6 +17,35 @@ BezierFlakeC0::BezierFlakeC0(Shader sh, glm::uvec2 flakes_count, glm::uvec2 divi
 	shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader.tes");
 }
 
+void BezierFlakeC0::Serialize(xml_document<>& document, xml_node<>* scene)
+{
+	auto figure = document.allocate_node(node_element, "PatchC0");
+	figure->append_attribute(document.allocate_attribute("Name", document.allocate_string(constname.c_str())));
+	figure->append_attribute(document.allocate_attribute("N", document.allocate_string(std::to_string(num_of_flakes.y).c_str())));
+	figure->append_attribute(document.allocate_attribute("M", document.allocate_string(std::to_string(num_of_flakes.x).c_str())));
+	figure->append_attribute(document.allocate_attribute("NSlices", document.allocate_string(std::to_string(number_of_divisions[1]).c_str())));
+	figure->append_attribute(document.allocate_attribute("MSlices", document.allocate_string(std::to_string(number_of_divisions[0]).c_str())));
+	auto pointsNode = document.allocate_node(node_element, "Points");
+	for (auto& point : points) {
+		{
+			auto pointRef = document.allocate_node(node_element, "PointRef");
+			pointRef->append_attribute(document.allocate_attribute("Name", document.allocate_string(point->constname.c_str())));
+			pointsNode->append_node(pointRef);
+			point->Serialize(document, scene);
+		}
+	}
+	if (type_ == 1) {
+		for (int j = 0; j < 3 * num_of_flakes.y + 1; j++) {
+			auto point = points[j];
+			auto pointRef = document.allocate_node(node_element, "PointRef");
+			pointRef->append_attribute(document.allocate_attribute("Name", document.allocate_string(point->constname.c_str())));
+			pointsNode->append_node(pointRef);
+		}
+	}
+	figure->append_node(pointsNode);
+	scene->append_node(figure);
+}
+
 void BezierFlakeC0::DrawObject(glm::mat4 mvp_)
 {
 	if (need_update) {

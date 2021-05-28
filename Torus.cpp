@@ -90,6 +90,41 @@ void Torus::CreateMenu()
 	
 }
 
+void Torus::Serialize(xml_document<>& document, xml_node<>* scene)
+{
+	auto figure = document.allocate_node(node_element, "Torus");
+	figure->append_attribute(document.allocate_attribute("MinorRadius", document.allocate_string(std::to_string(r).c_str())));
+	figure->append_attribute(document.allocate_attribute("MajorRadius", document.allocate_string(std::to_string(R).c_str())));
+	figure->append_attribute(document.allocate_attribute("MinorSegments", document.allocate_string(std::to_string(horizontal_points_number).c_str())));
+	figure->append_attribute(document.allocate_attribute("MajorSegments", document.allocate_string(std::to_string(vertical_points_number).c_str())));
+
+	xml_node <>* position = document.allocate_node(node_element, "Position");
+	auto pos = this->position;
+	position->append_attribute(document.allocate_attribute("X", document.allocate_string(std::to_string(pos.x).c_str())));
+	position->append_attribute(document.allocate_attribute("Y", document.allocate_string(std::to_string(pos.y).c_str())));
+	position->append_attribute(document.allocate_attribute("Z", document.allocate_string(std::to_string(pos.z).c_str())));
+
+	xml_node <>* rotation = document.allocate_node(node_element, "Rotation");
+	glm::quat quat = quaternion_rotation;
+	rotation->append_attribute(document.allocate_attribute("X", document.allocate_string(std::to_string(quat.x).c_str())));
+	rotation->append_attribute(document.allocate_attribute("Y", document.allocate_string(std::to_string(quat.y).c_str())));
+	rotation->append_attribute(document.allocate_attribute("Z", document.allocate_string(std::to_string(quat.z).c_str())));
+	rotation->append_attribute(document.allocate_attribute("W", document.allocate_string(std::to_string(quat.w).c_str())));
+
+	xml_node <>* scale = document.allocate_node(node_element, "Scale");
+	auto sc = this->scale;
+	scale->append_attribute(document.allocate_attribute("X", document.allocate_string(std::to_string(sc.x).c_str())));
+	scale->append_attribute(document.allocate_attribute("Y", document.allocate_string(std::to_string(sc.y).c_str())));
+	scale->append_attribute(document.allocate_attribute("Z", document.allocate_string(std::to_string(sc.z).c_str())));
+
+	figure->append_node(position);
+	figure->append_node(rotation);
+	figure->append_node(scale);
+
+	figure->append_attribute(document.allocate_attribute("Name", document.allocate_string(constname.c_str())));
+	scene->append_node(figure);
+}
+
 void Torus::SetR(float _R)
 {
 	R = _R;

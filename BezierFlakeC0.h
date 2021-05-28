@@ -14,6 +14,7 @@ public:
         num_of_flakes = flakes_count;
         number_of_divisions[0] = 4;
         number_of_divisions[1] = 4;
+        type_ = type;
         this->color = { 1.0f,1.0f,1.0f,1.0f };
         update_object();
         shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader.tes");
@@ -21,6 +22,8 @@ public:
 
     BezierFlakeC0(Shader sh) :Bezier(sh), polygons() {}
     BezierFlakeC0(Shader sh, glm::uvec2 flakes_count, glm::uvec2 divisions_, std::vector<std::shared_ptr<Point>> points);
+
+    void Serialize(xml_document<>& document, xml_node<>* scene) override;
 
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override;
@@ -37,6 +40,7 @@ protected:
     int number_of_divisions[2];
     glm::uvec2 num_of_flakes;
     void update_object() override;
+    int type_{ 0 };
 
 private:
     virtual void create_vertices(int type, glm::uvec2 flakes_count, glm::vec2 sizes);

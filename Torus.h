@@ -18,6 +18,8 @@ public:
     float GetHorizontal() const { return horizontal_points_number; }
     glm::vec4 GetColor() const { return color; }
 
+    void Serialize(xml_document<>& document, xml_node<>* scene)  override;
+
     void SetR(float _R);
     void Setr(float _r);
     void SetVertical(int _v);

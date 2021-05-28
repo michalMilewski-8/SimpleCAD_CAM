@@ -16,6 +16,7 @@ public:
     void AddPointToCurve(std::shared_ptr<Point>& point) override;
     void Update() override;
     std::vector<Object*> GetVirtualObjects() override;
+    void Serialize(xml_document<>& document, xml_node<>* scene) override;
 
     static unsigned int counter;
 private:

@@ -19,6 +19,19 @@ Point::Point(glm::vec3 position, glm::vec4 color, Shader sh, bool virt) :Object(
 	MoveObject(position);
 }
 
+void Point::Serialize(xml_document<>& document, xml_node<>* scene)
+{
+	auto figure = document.allocate_node(node_element, "Point");
+	xml_node <>* position = document.allocate_node(node_element, "Position");
+	auto pos = this->position;
+	position->append_attribute(document.allocate_attribute("X", document.allocate_string(std::to_string(pos.x).c_str())));
+	position->append_attribute(document.allocate_attribute("Y", document.allocate_string(std::to_string(pos.y).c_str())));
+	position->append_attribute(document.allocate_attribute("Z", document.allocate_string(std::to_string(pos.z).c_str())));
+	figure->append_node(position);
+	figure->append_attribute(document.allocate_attribute("Name", document.allocate_string(constname.c_str())));
+	scene->append_node(figure);
+}
+
 void Point::DrawObject(glm::mat4 mvp)
 {
 	Object::DrawObject(mvp);
