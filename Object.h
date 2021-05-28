@@ -39,7 +39,7 @@ public:
 	void SetName(std::string name_);
 	bool CompareName(std::string name_);
 	virtual void Update() {};
-	virtual std::vector<VirtualObject*> GetVirtualObjects() { return std::vector<VirtualObject*>(); };
+	virtual std::vector<Object*> GetVirtualObjects() { return std::vector<Object*>(); };
 
 	static glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
 	

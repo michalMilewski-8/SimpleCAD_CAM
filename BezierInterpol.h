@@ -15,7 +15,7 @@ public:
 
     void AddPointToCurve(std::shared_ptr<Point>& point) override;
     void Update() override;
-    std::vector<VirtualObject*> GetVirtualObjects() override;
+    std::vector<Object*> GetVirtualObjects() override;
 
     static unsigned int counter;
 private:

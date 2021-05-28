@@ -51,7 +51,7 @@ bool plain = true;
 float ipd = 0.01f;
 float d = 1.0f;
 float near = 0.001f;
-float far = 20.0f;
+float far = 200.0f;
 Camera cam;
 Shader ourShader;
 std::unique_ptr<Cursor> cursor, center;
@@ -222,7 +222,7 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -355,9 +355,9 @@ void processInput(GLFWwindow* window)
 				obj->UnSelect();
 			}
 			for (auto& virt : obj->GetVirtualObjects()) {
-				if (virt->SelectedVirt())
+				if (virt->selected)
 				{
-					virt->UnSelectVirt();
+					virt->UnSelect();
 				}
 			}
 		}
@@ -432,10 +432,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 					obj->MoveObjectTo(odn + static_cast<glm::vec3>(roation * pos));
 				}
 				for (auto& virt : obj->GetVirtualObjects()) {
-					if (virt->SelectedVirt())
+					if (virt->selected)
 					{
-						glm::vec4 pos2 = { virt->getPosition() - odn, 0.0f };
-						virt->MoveVirtObjectTo(odn + static_cast<glm::vec3>(roation * pos2));
+						glm::vec4 pos2 = { virt->GetPosition() - odn, 0.0f };
+						virt->MoveObjectTo(odn + static_cast<glm::vec3>(roation * pos2));
 					}
 				}
 			}
@@ -471,8 +471,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 				if (obj->selected)
 					obj->MoveObject(-right_movement + -up_movement);
 				for (auto& virt : obj->GetVirtualObjects()) {
-					if (virt->SelectedVirt())
-						virt->MoveVirtObject(-right_movement + -up_movement);
+					if (virt->selected)
+						virt->MoveObject(-right_movement + -up_movement);
 				}
 			}
 		}
@@ -533,7 +533,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				}
 			}
 			for (auto& virt : obj->GetVirtualObjects()) {
-				auto vr_point = dynamic_cast<VirtualPoint*>(virt);
+				auto vr_point = dynamic_cast<Point*>(virt);
 				if (vr_point) {
 					glm::vec3 point2 = vr_point->GetPosition();
 					glm::vec3 toPoint2(point2 - glm::vec3(lRayStart_world));
@@ -823,8 +823,10 @@ void main_menu() {
 					glm::vec3 pos = glm::vec3(std::atof(position->first_attribute("X")->value()),
 						std::atof(position->first_attribute("Y")->value()),
 						std::atof(position->first_attribute("Z")->value()));
-					auto point = make_shared<Point>(pos, glm::vec4(1, 1, 1, 1), ourShader);
+					auto point = make_shared<Point>(pos, glm::vec4(0.5f, 0.0, 0.5f, 1), ourShader);
 					point->SetName(point_node->first_attribute("Name")->value());
+					point->screen_height = &height_;
+					point->screen_width = &width_;
 					objects_in_file.push_back(point);
 				}
 
@@ -842,25 +844,30 @@ void main_menu() {
 						glm::vec3 pos = glm::vec3(std::atof(position->first_attribute("X")->value()),
 							std::atof(position->first_attribute("Y")->value()),
 							std::atof(position->first_attribute("Z")->value()));
-						auto rotation = object_node->first_node("Position");
-						glm::quat rot = glm::quat(std::atof(rotation->first_attribute("X")->value()),
+						auto rotation = object_node->first_node("Rotation");
+						glm::quat rot = glm::quat(std::atof(rotation->first_attribute("W")->value()),
+							std::atof(rotation->first_attribute("X")->value()),
 							std::atof(rotation->first_attribute("Y")->value()),
-							std::atof(rotation->first_attribute("Z")->value()),
-							std::atof(rotation->first_attribute("W")->value()));
-						auto scale = object_node->first_node("Position");
+							std::atof(rotation->first_attribute("Z")->value()));
+						auto scale = object_node->first_node("Scale");
 						glm::vec3 sc = glm::vec3(std::atof(scale->first_attribute("X")->value()),
 							std::atof(scale->first_attribute("Y")->value()),
 							std::atof(scale->first_attribute("Z")->value()));
-						auto object = std::make_shared<Torus>(R,r,H,h,glm::vec4(1,1,1,1),ourShader);
+						auto object = std::make_shared<Torus>(R,r,h,H,glm::vec4(1,1,1,1),ourShader);
 						object->MoveObjectTo(pos);
 						object->RotateObject(rot);
 						object->ResizeObject(sc);
+						object->screen_height = &height_;
+						object->screen_width = &width_;
+						object->SetName(object_node->first_attribute("Name")->value());
 						objects_in_file.push_back(object);
 					}
 					else if (node_type == "BezierC0") {
 						auto object = std::make_shared<BezierC0>(ourShader);
+						object->screen_height = &height_;
+						object->screen_width = &width_;
 						auto points_list = object_node->first_node("Points");
-						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = points_list->next_sibling("PointRef")) {
+						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = point_node->next_sibling("PointRef")) {
 							string ref = point_node->first_attribute("Name")->value();
 							for (const auto& obj : objects_in_file) {
 								if (obj->CompareName(ref)) {
@@ -870,8 +877,7 @@ void main_menu() {
 								}
 							}
 						}
-						object->screen_height = &height_;
-						object->screen_width = &width_;
+						object->SetName(object_node->first_attribute("Name")->value());
 						objects_in_file.push_back(object);
 					}
 					else if (node_type == "BezierC2") {
@@ -889,12 +895,13 @@ void main_menu() {
 						}
 						object->screen_height = &height_;
 						object->screen_width = &width_;
+						object->SetName(object_node->first_attribute("Name")->value());
 						objects_in_file.push_back(object);
 					}
 					else if (node_type == "BezierInter") {
 						auto object = std::make_shared<BezierInterpol>(ourShader);
 						auto points_list = object_node->first_node("Points");
-						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = points_list->next_sibling("PointRef")) {
+						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = point_node->next_sibling("PointRef")) {
 							string ref = point_node->first_attribute("Name")->value();
 							for (const auto& obj : objects_in_file) {
 								if (obj->CompareName(ref)) {
@@ -906,13 +913,57 @@ void main_menu() {
 						}
 						object->screen_height = &height_;
 						object->screen_width = &width_;
+						object->SetName(object_node->first_attribute("Name")->value());
 						objects_in_file.push_back(object);
 					}
 					else if (node_type == "PatchC0") {
-
+						
+						auto points_list = object_node->first_node("Points");
+						std::vector<std::shared_ptr<Point>> patch_points = {};
+						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = point_node->next_sibling("PointRef")) {
+							string ref = point_node->first_attribute("Name")->value();
+							for (const auto& obj : objects_in_file) {
+								if (obj->CompareName(ref)) {
+									auto point = std::dynamic_pointer_cast<Point>(obj);
+									patch_points.push_back(point);
+									break;
+								}
+							}
+						}
+						glm::uvec2 flakes = {std::atoi(object_node->first_attribute("M")->value()),std::atoi(object_node->first_attribute("N")->value())};
+						glm::uvec2 divisions = { std::atoi(object_node->first_attribute("MSlices")->value()),std::atoi(object_node->first_attribute("NSlices")->value()) };
+						auto object = std::make_shared<BezierFlakeC0>(ourShader,flakes,divisions,patch_points);
+						object->screen_height = &height_;
+						object->screen_width = &width_;
+						for (auto& obj : patch_points) {
+							obj->AddOwner(object);
+						}
+						object->SetName(object_node->first_attribute("Name")->value());
+						objects_in_file.push_back(object);
 					}
 					else if (node_type == "PatchC2") {
-
+						auto points_list = object_node->first_node("Points");
+						std::vector<std::shared_ptr<Point>> patch_points = {};
+						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = point_node->next_sibling("PointRef")) {
+							string ref = point_node->first_attribute("Name")->value();
+							for (const auto& obj : objects_in_file) {
+								if (obj->CompareName(ref)) {
+									auto point = std::dynamic_pointer_cast<Point>(obj);
+									patch_points.push_back(point);
+									break;
+								}
+							}
+						}
+						glm::uvec2 flakes = { std::atoi(object_node->first_attribute("M")->value()),std::atoi(object_node->first_attribute("N")->value()) };
+						glm::uvec2 divisions = { std::atoi(object_node->first_attribute("MSlices")->value()),std::atoi(object_node->first_attribute("NSlices")->value()) };
+						auto object = std::make_shared<BezierFlakeC2>(ourShader, flakes, divisions, patch_points);
+						object->screen_height = &height_;
+						object->screen_width = &width_;
+						for (auto& obj : patch_points) {
+							obj->AddOwner(object);
+						}
+						object->SetName(object_node->first_attribute("Name")->value());
+						objects_in_file.push_back(object);
 					}
 				}
 				objects_list.insert(objects_list.end(), objects_in_file.begin(), objects_in_file.end());

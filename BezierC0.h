@@ -28,7 +28,7 @@ private:
     std::vector<unsigned int> lines;
 
     int number_of_divisions;
-    bool draw_polygon;
+    bool draw_polygon{ false };
     bool was_draw_polygon;
 
     glm::vec3 sub_sum[5];

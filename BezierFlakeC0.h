@@ -4,14 +4,14 @@
 #include "VirtualPoint.h"
 
 class BezierFlakeC0 :
-    public Bezier/*,
-    public std::enable_shared_from_this<BezierFlakeC0>*/
+    public Bezier
 {
 public:
     BezierFlakeC0(Shader sh, int type, glm::uvec2 flakes_count, glm::vec2 sizes) :Bezier(sh), polygons() {
         create_vertices(type, flakes_count, sizes);
         sprintf_s(name, 512, ("BezierFlakeC0 " + std::to_string(counter)).c_str());
         constname = "BezierFlakeC0 " + std::to_string(counter++);
+        num_of_flakes = flakes_count;
         number_of_divisions[0] = 4;
         number_of_divisions[1] = 4;
         this->color = { 1.0f,1.0f,1.0f,1.0f };
@@ -20,11 +20,12 @@ public:
     }
 
     BezierFlakeC0(Shader sh) :Bezier(sh), polygons() {}
+    BezierFlakeC0(Shader sh, glm::uvec2 flakes_count, glm::uvec2 divisions_, std::vector<std::shared_ptr<Point>> points);
 
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override;
 
-    std::vector<VirtualObject*> GetVirtualObjects();
+    std::vector<Object*> GetVirtualObjects();
 
     void Update() override;
 
@@ -32,8 +33,9 @@ public:
 protected:
     std::vector<unsigned int> patches;
     std::vector<std::shared_ptr<Line>> polygons;
-    std::vector<std::shared_ptr<VirtualPoint>> points;
+    std::vector<std::shared_ptr<Point>> points;
     int number_of_divisions[2];
+    glm::uvec2 num_of_flakes;
     void update_object() override;
 
 private:
@@ -41,11 +43,12 @@ private:
 
 
     void create_curve();
+    void index_vertices();
 
 
     std::vector<float> points_on_curve;
 
-    bool draw_polygon;
+    bool draw_polygon{ false };
     bool was_draw_polygon;
 
     std::vector<glm::vec3> points_;

@@ -169,9 +169,9 @@ void BezierInterpol::Update()
 	polygon_bezier->Update();
 }
 
-std::vector<VirtualObject*> BezierInterpol::GetVirtualObjects()
+std::vector<Object*> BezierInterpol::GetVirtualObjects()
 {
-	auto res = std::vector<VirtualObject*>();
+	auto res = std::vector<Object*>();
 	// TODO zastanowiæ siê czy coœ zwracaæ
 	return res;
 }

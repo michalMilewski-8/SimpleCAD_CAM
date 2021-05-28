@@ -165,9 +165,9 @@ void BezierC2::Update()
 	polygon_bezier->Update();
 }
 
-std::vector<VirtualObject*> BezierC2::GetVirtualObjects()
+std::vector<Object*> BezierC2::GetVirtualObjects()
 {
-	auto res = std::vector<VirtualObject*>();
+	auto res = std::vector<Object*>();
 	for (auto& pt : bezier_points) {
 		res.push_back(pt.get());
 	}

@@ -2,6 +2,21 @@
 
 unsigned int BezierFlakeC0::counter = 1;
 
+BezierFlakeC0::BezierFlakeC0(Shader sh, glm::uvec2 flakes_count, glm::uvec2 divisions_, std::vector<std::shared_ptr<Point>> pointss_) :Bezier(sh)
+{
+	num_of_flakes = flakes_count;
+	number_of_divisions[0] = divisions_.x;
+	number_of_divisions[1] = divisions_.y;
+	points.insert(points.end(), pointss_.begin(), pointss_.end());
+	sprintf_s(name, 512, ("BezierFlakeC0 " + std::to_string(counter)).c_str());
+	constname = "BezierFlakeC0 " + std::to_string(counter++);
+	index_vertices();
+
+	this->color = { 1.0f,1.0f,1.0f,1.0f };
+	update_object();
+	shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader.tes");
+}
+
 void BezierFlakeC0::DrawObject(glm::mat4 mvp_)
 {
 	if (need_update) {
@@ -37,9 +52,9 @@ void BezierFlakeC0::DrawObject(glm::mat4 mvp_)
 	glBindVertexArray(0);
 }
 
-std::vector<VirtualObject*> BezierFlakeC0::GetVirtualObjects()
+std::vector<Object*> BezierFlakeC0::GetVirtualObjects()
 {
-	auto res = std::vector<VirtualObject*>();
+	auto res = std::vector<Object*>();
 	for (auto& pt : points) {
 		res.push_back(pt.get());
 	}
@@ -256,4 +271,31 @@ void BezierFlakeC0::create_curve()
 		licznik++;
 	}
 	position /= licznik;
+}
+
+void BezierFlakeC0::index_vertices()
+{
+	for (int i = 0; i < num_of_flakes.x; i++) {
+		for (int j = 0; j < num_of_flakes.y; j++) {
+			patches.push_back((3 * num_of_flakes.y + 1) * 3 * i + 3 * j + 0);
+			patches.push_back((3 * num_of_flakes.y + 1) * 3 * i + 3 * j + 1);
+			patches.push_back((3 * num_of_flakes.y + 1) * 3 * i + 3 * j + 2);
+			patches.push_back((3 * num_of_flakes.y + 1) * 3 * i + 3 * j + 3);
+
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 1) + 3 * j + 0);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 1) + 3 * j + 1);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 1) + 3 * j + 2);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 1) + 3 * j + 3);
+
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 2) + 3 * j + 0);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 2) + 3 * j + 1);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 2) + 3 * j + 2);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 2) + 3 * j + 3);
+
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 3) + 3 * j + 0);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 3) + 3 * j + 1);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 3) + 3 * j + 2);
+			patches.push_back((3 * num_of_flakes.y + 1) * (3 * i + 3) + 3 * j + 3);
+		}
+	}
 }

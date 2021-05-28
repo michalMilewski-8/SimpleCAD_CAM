@@ -15,7 +15,7 @@ public:
 
     void AddPointToCurve(std::shared_ptr<Point>& point) override;
     void Update() override;
-    std::vector<VirtualObject*> GetVirtualObjects() override;
+    std::vector<Object*> GetVirtualObjects() override;
 
     static unsigned int counter;
 private:
@@ -35,11 +35,11 @@ private:
     std::vector<unsigned int> lines;
 
     int number_of_divisions;
-    bool draw_polygon;
+    bool draw_polygon{ false };
     bool was_draw_polygon;
     bool show_bezier_points{ false };
 
-    bool draw_polygon_bezier;
+    bool draw_polygon_bezier{ false };
     bool was_draw_polygon_bezier;
     bool need_new_bezier_generation{ true };
 

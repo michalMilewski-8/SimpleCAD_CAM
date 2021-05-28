@@ -156,7 +156,7 @@ void Torus::create_torus_points() {
 }
 
 glm::vec3 Torus::torus_point(float alfa_r, float beta_r) {
-	return { glm::cos(beta_r) * R - glm::sin(alfa_r) * glm::cos(beta_r) * r,glm::sin(beta_r) * R - glm::sin(alfa_r) * glm::sin(beta_r) * r,glm::cos(alfa_r) * r };
+	return { glm::cos(beta_r) * R - glm::sin(alfa_r) * glm::cos(beta_r) * r,glm::cos(alfa_r) * r,glm::sin(beta_r) * R - glm::sin(alfa_r) * glm::sin(beta_r) * r, };
 }
 
 void Torus::update_object()
