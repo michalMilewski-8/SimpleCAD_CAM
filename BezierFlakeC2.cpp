@@ -66,9 +66,9 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 		break;
 	}
 	case 1: { //barrel
-		float stridex = glm::two_pi<float>() / (flakes_count.x + 2);
+		float stridex = glm::two_pi<float>() / (flakes_count.x);
 		float stridez = sizes.y / (flakes_count.y + 2);
-		for (int i = 0; i < flakes_count.x + 2; i++) {
+		for (int i = 0; i < flakes_count.x; i++) {
 			float xpos = sizes.x * std::cos(i * stridex);
 			float ypos = sizes.x * std::sin(i * stridex);
 			polygons.push_back(std::make_shared<Line>(shader));
@@ -90,7 +90,7 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 		for (int j = 0; j < flakes_count.y + 3; j++) {
 			polygons[j + 1]->AddPoint(points[j]);
 		}
-		for (int i = 0; i < flakes_count.x+2; i++) {
+		for (int i = 0; i < flakes_count.x; i++) {
 
 			for (int j = 0; j < flakes_count.y; j++) {
 
@@ -98,10 +98,10 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 				patches.push_back((flakes_count.y + 3) * i + j + 1);
 				patches.push_back((flakes_count.y + 3) * i + j + 2);
 				patches.push_back((flakes_count.y + 3) * i + j + 3);
-										
-				
 
-				if (i == flakes_count.x + 1 ) {
+
+
+				if (i == flakes_count.x -1) {
 					patches.push_back(j + 0);
 					patches.push_back(j + 1);
 					patches.push_back(j + 2);
@@ -117,11 +117,11 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 					patches.push_back((flakes_count.y + 3) * (2) + j + 2);
 					patches.push_back((flakes_count.y + 3) * (2) + j + 3);
 				}
-				else if (i == flakes_count.x ) {
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 0);
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 1);
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 2);
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 3);
+				else if (i == flakes_count.x - 2) {
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 0);
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 1);
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 2);
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 3);
 
 					patches.push_back(j + 0);
 					patches.push_back(j + 1);
@@ -133,16 +133,16 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 					patches.push_back((flakes_count.y + 3) * (1) + j + 2);
 					patches.push_back((flakes_count.y + 3) * (1) + j + 3);
 				}
-				else if (i == flakes_count.x - 1) {
+				else if (i == flakes_count.x - 3) {
 					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 0);
 					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 1);
 					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 2);
 					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 3);
 
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 0);
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 1);
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 2);
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 3);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 0);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 1);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 2);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 3);
 
 					patches.push_back(j + 0);
 					patches.push_back(j + 1);
@@ -150,22 +150,21 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 					patches.push_back(j + 3);
 				}
 				else {
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 0);
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 1);
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 2);
-					patches.push_back((flakes_count.y + 3)* (i + 1) + j + 3);
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 0);
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 1);
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 2);
+					patches.push_back((flakes_count.y + 3) * (i + 1) + j + 3);
 
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 0);
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 1);
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 2);
-					patches.push_back((flakes_count.y + 3)* (i + 2) + j + 3);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 0);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 1);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 2);
+					patches.push_back((flakes_count.y + 3) * (i + 2) + j + 3);
 
-					patches.push_back((flakes_count.y + 3)* (i + 3) + j + 0);
-					patches.push_back((flakes_count.y + 3)* (i + 3) + j + 1);
-					patches.push_back((flakes_count.y + 3)* (i + 3) + j + 2);
-					patches.push_back((flakes_count.y + 3)* (i + 3) + j + 3);
+					patches.push_back((flakes_count.y + 3) * (i + 3) + j + 0);
+					patches.push_back((flakes_count.y + 3) * (i + 3) + j + 1);
+					patches.push_back((flakes_count.y + 3) * (i + 3) + j + 2);
+					patches.push_back((flakes_count.y + 3) * (i + 3) + j + 3);
 				}
-
 			}
 		}
 		break;

@@ -222,7 +222,7 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
