@@ -1032,6 +1032,19 @@ void move_selected_to_cursor() {
 	}
 }
 
+void remove_unnecessary_points() {
+	int point_to_erase = -1;
+	for (int i = 0; i < objects_list.size(); i++) {
+		if (objects_list[i].use_count() > 1) {
+			point_to_erase = i;
+			break;
+		}
+	}
+	if (point_to_erase > -1)
+		objects_list.erase(objects_list.begin() + point_to_erase);
+	else return;
+	remove_unnecessary_points();
+}
 void create_gui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -1047,6 +1060,7 @@ void create_gui() {
 	choosing_point_of_transformation_gui();
 	move_selected_to_cursor();
 	adding_new_objects_gui();
+	if (ImGui::Button("Erase unused points")) remove_unnecessary_points();
 	objects_on_scene_gui();
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
