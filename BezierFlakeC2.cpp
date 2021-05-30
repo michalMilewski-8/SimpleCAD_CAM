@@ -115,7 +115,7 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 	case 1: { //barrel
 		float stridex = glm::two_pi<float>() / (flakes_count.x);
 		float stridez = sizes.y / (flakes_count.y + 2);
-		for (int i = 0; i < flakes_count.x; i++) {
+		for (int i = 0; i < flakes_count.x ; i++) {
 			float xpos = sizes.x * std::cos(i * stridex);
 			float ypos = sizes.x * std::sin(i * stridex);
 			polygons.push_back(std::make_shared<Line>(shader));

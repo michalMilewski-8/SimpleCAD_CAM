@@ -95,8 +95,8 @@ void Torus::Serialize(xml_document<>& document, xml_node<>* scene)
 	auto figure = document.allocate_node(node_element, "Torus");
 	figure->append_attribute(document.allocate_attribute("MinorRadius", document.allocate_string(std::to_string(r).c_str())));
 	figure->append_attribute(document.allocate_attribute("MajorRadius", document.allocate_string(std::to_string(R).c_str())));
-	figure->append_attribute(document.allocate_attribute("MinorSegments", document.allocate_string(std::to_string(horizontal_points_number).c_str())));
-	figure->append_attribute(document.allocate_attribute("MajorSegments", document.allocate_string(std::to_string(vertical_points_number).c_str())));
+	figure->append_attribute(document.allocate_attribute("MajorSegments", document.allocate_string(std::to_string(horizontal_points_number).c_str())));
+	figure->append_attribute(document.allocate_attribute("MinorSegments", document.allocate_string(std::to_string(vertical_points_number).c_str())));
 
 	xml_node <>* position = document.allocate_node(node_element, "Position");
 	auto pos = this->position;

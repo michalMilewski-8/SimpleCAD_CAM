@@ -135,7 +135,7 @@ int main() {
 	cam.SetPerspective(glm::radians(45.0f), DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, near, far);
 	//cam->SetOrthographic(-1, 1, 1, -1, -1, 1);
 
-	objects_list.push_back(std::make_shared<Torus>(0.5, 0.1, 10, 10, glm::vec4( 1,1,0,1 ), ourShader));
+	objects_list.push_back(std::make_shared<Torus>(0.5, 0.1, 10, 10, glm::vec4(1, 1, 0, 1), ourShader));
 	objects_list.back()->screen_height = &height_;
 	objects_list.back()->screen_width = &width_;
 
@@ -224,7 +224,7 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -250,7 +250,8 @@ int main() {
 
 		if (!stereoscopic) {
 			draw_scene();
-		} else {
+		}
+		else {
 			glm::vec3 posN = cameraPos;
 			glBindFramebuffer(GL_FRAMEBUFFER, framebufferLeftEye);
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -325,6 +326,12 @@ void draw_scene() {
 			if (std::dynamic_pointer_cast<Bezier>(ob)) continue;
 			number_of_selected++;
 			center_point += ob->GetPosition();
+		}
+		for (auto& vir : ob->GetVirtualObjects()) {
+			if (vir->selected) {
+				number_of_selected++;
+				center_point += vir->GetPosition();
+			}
 		}
 	}
 	if (number_of_selected > 0) {
@@ -598,10 +605,10 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Point")) {
-		auto point = std::make_shared<Point>(starting_pos,glm::vec4( 1,1,0,1 ), ourShader);
+		auto point = std::make_shared<Point>(starting_pos, glm::vec4(1, 1, 0, 1), ourShader);
 		point->screen_height = &height_;
 		point->screen_width = &width_;
-		for(auto& obj : objects)
+		for (auto& obj : objects)
 		{
 			if (obj->selected) {
 				auto bez = std::dynamic_pointer_cast<Bezier>(obj);
@@ -665,16 +672,16 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 		ImGui::RadioButton("barrel", &planar, 1);
 		static float dimensions[2] = { 1,1 };
 		if (planar == 0) {
-			ImGui::InputFloat2("set width and height of the plane",dimensions);
+			ImGui::InputFloat2("set width and height of the plane", dimensions);
 		}
 		else {
 			ImGui::InputFloat2("set radius and height of the barell", dimensions);
 		}
 		static int patches[2] = { 1,1 };
-		ImGui::DragInt2("Set number of patches in u and v dimensions", patches,0.5f, 1, 100);
+		ImGui::DragInt2("Set number of patches in u and v dimensions", patches, 0.5f, 1, 100);
 		if (ImGui::Button("Create flake!!!")) {
-			objects.push_back(std::make_shared<BezierFlakeC0>(ourShader,planar,glm::uvec2(patches[0], patches[1]), glm::vec2(dimensions[0], dimensions[1])));
-			
+			objects.push_back(std::make_shared<BezierFlakeC0>(ourShader, planar, glm::uvec2(patches[0], patches[1]), glm::vec2(dimensions[0], dimensions[1])));
+
 		}
 	}
 
@@ -782,6 +789,14 @@ void cursor_position_gui() {
 		glm::vec3 position = start + se * (glm::dot(-cameraFront, start - lookAt) / glm::dot(-se, -cameraFront));
 		cursor->SetCursorPosition(position);
 	}
+
+	ImGui::Text("Center Cursor positions");
+	auto pos2 = center->GetPosition();
+	ImGui::Text("world Position");
+	ImGui::InputFloat("X##ab", &(pos2.x));
+	ImGui::InputFloat("Y##ab", &(pos2.y));
+	ImGui::InputFloat("Z##ab", &(pos2.z));
+	center->SetCursorPosition(pos2);
 }
 
 void choosing_point_of_transformation_gui() {
@@ -855,7 +870,7 @@ void main_menu() {
 						glm::vec3 sc = glm::vec3(std::atof(scale->first_attribute("X")->value()),
 							std::atof(scale->first_attribute("Y")->value()),
 							std::atof(scale->first_attribute("Z")->value()));
-						auto object = std::make_shared<Torus>(R,r,h,H,glm::vec4(1,1,1,1),ourShader);
+						auto object = std::make_shared<Torus>(R, r, h, H, glm::vec4(0.7f, 0.7f, 0.7f, 0.5f), ourShader);
 						object->MoveObjectTo(pos);
 						object->RotateObject(rot);
 						object->ResizeObject(sc);
@@ -919,7 +934,7 @@ void main_menu() {
 						objects_in_file.push_back(object);
 					}
 					else if (node_type == "PatchC0") {
-						
+
 						auto points_list = object_node->first_node("Points");
 						std::vector<std::shared_ptr<Point>> patch_points = {};
 						for (xml_node<>* point_node = points_list->first_node("PointRef"); point_node; point_node = point_node->next_sibling("PointRef")) {
@@ -932,9 +947,9 @@ void main_menu() {
 								}
 							}
 						}
-						glm::uvec2 flakes = {std::atoi(object_node->first_attribute("M")->value()),std::atoi(object_node->first_attribute("N")->value())};
+						glm::uvec2 flakes = { std::atoi(object_node->first_attribute("M")->value()),std::atoi(object_node->first_attribute("N")->value()) };
 						glm::uvec2 divisions = { std::atoi(object_node->first_attribute("MSlices")->value()),std::atoi(object_node->first_attribute("NSlices")->value()) };
-						auto object = std::make_shared<BezierFlakeC0>(ourShader,flakes,divisions,patch_points);
+						auto object = std::make_shared<BezierFlakeC0>(ourShader, flakes, divisions, patch_points);
 						object->screen_height = &height_;
 						object->screen_width = &width_;
 						for (auto& obj : patch_points) {
@@ -989,6 +1004,34 @@ void main_menu() {
 	}
 }
 
+void move_selected_to_cursor() {
+	if (ImGui::Button("Move Selected to cursor possition")) {
+		glm::vec3 odn = center->GetPosition();
+		switch (e) {
+		case 0:
+			odn = center->GetPosition();
+			break;
+		case 1:
+			odn = cursor->GetPosition();
+			break;
+		default:
+			return;
+			break;
+		}
+
+		for (auto& obj : objects_list) {
+			if (obj->selected) {
+				obj->MoveObjectTo(odn);
+			}
+			for (auto& vir : obj->GetVirtualObjects()) {
+				if (vir->selected) {
+					vir->MoveObjectTo(odn);
+				}
+			}
+		}
+	}
+}
+
 void create_gui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -1002,6 +1045,7 @@ void create_gui() {
 	stereoscopic_settings();
 	cursor_position_gui();
 	choosing_point_of_transformation_gui();
+	move_selected_to_cursor();
 	adding_new_objects_gui();
 	objects_on_scene_gui();
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
