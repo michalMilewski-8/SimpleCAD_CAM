@@ -13,7 +13,7 @@ BezierFlakeC0::BezierFlakeC0(Shader sh, glm::uvec2 flakes_count, glm::uvec2 divi
 	index_vertices();
 
 	this->color = { 1.0f,1.0f,1.0f,1.0f };
-	update_object();
+	Update();
 	shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader.tes");
 }
 
@@ -81,11 +81,11 @@ void BezierFlakeC0::DrawObject(glm::mat4 mvp_)
 	glBindVertexArray(0);
 }
 
-std::vector<Object*> BezierFlakeC0::GetVirtualObjects()
+std::vector<std::shared_ptr<Object>> BezierFlakeC0::GetVirtualObjects()
 {
-	auto res = std::vector<Object*>();
+	auto res = std::vector<std::shared_ptr<Object>>();
 	for (auto& pt : points) {
-		res.push_back(pt.get());
+		res.push_back(pt);
 	}
 	return res;
 }
@@ -147,6 +147,17 @@ void BezierFlakeC0::Update()
 		polygon->Update();
 }
 
+void BezierFlakeC0::UpdateMyPointer(std::string constname_,const std::shared_ptr<Object> new_point)
+{
+	for (int i = 0; i < points.size(); i++) {
+		auto point = points[i];
+		if (point->CompareName(constname_)) {
+			points.erase(points.begin() + i);
+			points.insert(points.begin() + i, std::dynamic_pointer_cast<Point>(new_point));
+		}
+	}
+}
+
 void BezierFlakeC0::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2 sizes)
 {
 	switch (type) {
@@ -158,8 +169,8 @@ void BezierFlakeC0::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 			polygons.push_back(std::make_shared<Line>(shader));
 			for (int j = 0; j < flakes_count.y * 3 + 1; j++) {
 				float ypos = j * stridey;
-				auto point = std::make_shared<VirtualPoint>(glm::vec3(xpos, 0.0f, ypos), shader);
-				point->AddOwner(this);
+				auto point = std::make_shared<Point>(glm::vec3(xpos, 0.0f, ypos), shader);
+				//point->AddOwner(shared_from_this());
 				points.push_back(point);
 				if (i == 0) {
 					polygons.push_back(std::make_shared<Line>(shader));
@@ -206,8 +217,8 @@ void BezierFlakeC0::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 			polygons.push_back(std::make_shared<Line>(shader));
 			for (int j = 0; j < flakes_count.y * 3 + 1; j++) {
 				float zpos = j * stridez;
-				auto point = std::make_shared<VirtualPoint>(glm::vec3(xpos, ypos, zpos), shader);
-				point->AddOwner(this);
+				auto point = std::make_shared<Point>(glm::vec3(xpos, ypos, zpos), shader);
+				//point->AddOwner(shared_from_this());
 				points.push_back(point);
 				if (i == 0) {
 					polygons.push_back(std::make_shared<Line>(shader));
@@ -286,6 +297,7 @@ void BezierFlakeC0::create_curve()
 	points_on_curve.clear();
 	int licznik = 0;
 	for (auto& point : points) {
+		if (!owners_added) point->AddOwner(shared_from_this());
 		auto sp = point->GetPosition();
 		points_.push_back(sp);
 		points_on_curve.push_back(sp.x);
@@ -300,6 +312,8 @@ void BezierFlakeC0::create_curve()
 		licznik++;
 	}
 	position /= licznik;
+	if (!owners_added)
+	owners_added = true;
 }
 
 void BezierFlakeC0::index_vertices()

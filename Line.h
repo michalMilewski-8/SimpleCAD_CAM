@@ -15,6 +15,7 @@ public:
     void Update() override;
     void DeletePoint(int index);
     void ClearPoints();
+    void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) override;
 
     static unsigned int counter;
 private:

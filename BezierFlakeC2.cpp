@@ -11,7 +11,7 @@ BezierFlakeC2::BezierFlakeC2(Shader sh, int type, glm::uvec2 flakes_count, glm::
 	number_of_divisions[1] = 4;
 	this->color = { 1.0f,1.0f,1.0f,1.0f };
 	type_ = type;
-	update_object();
+	Update();
 	shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader_C2.tes");
 }
 
@@ -27,7 +27,7 @@ BezierFlakeC2::BezierFlakeC2(Shader sh, glm::uvec2 flakes_count, glm::uvec2 divi
 	index_vertices();
 
 	this->color = { 1.0f,1.0f,1.0f,1.0f };
-	update_object();
+	Update();
 	shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader_C2.tes");
 }
 
@@ -60,6 +60,17 @@ void BezierFlakeC2::Serialize(xml_document<>& document, xml_node<>* scene)
 	scene->append_node(figure);
 }
 
+void BezierFlakeC2::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object> new_point)
+{
+	for (int i = 0; i < points.size(); i++) {
+		auto point = points[i];
+		if (point->CompareName(constname_)) {
+			points.erase(points.begin() + i);
+			points.insert(points.begin() + i, std::dynamic_pointer_cast<Point>(new_point));
+		}
+	}
+}
+
 void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2 sizes)
 {
 	switch (type) {
@@ -71,8 +82,8 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 			polygons.push_back(std::make_shared<Line>(shader));
 			for (int j = 0; j < flakes_count.y + 3; j++) {
 				float ypos = j * stridey;
-				auto point = std::make_shared<VirtualPoint>(glm::vec3(xpos, 0.0f, ypos), shader);
-				point->AddOwner(this);
+				auto point = std::make_shared<Point>(glm::vec3(xpos, 0.0f, ypos), shader);
+				//point->AddOwner(shared_from_this());
 				points.push_back(point);
 				if (i == 0) {
 					polygons.push_back(std::make_shared<Line>(shader));
@@ -121,8 +132,8 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 			polygons.push_back(std::make_shared<Line>(shader));
 			for (int j = 0; j < flakes_count.y + 3; j++) {
 				float zpos = j * stridez;
-				auto point = std::make_shared<VirtualPoint>(glm::vec3(xpos, ypos, zpos), shader);
-				point->AddOwner(this);
+				auto point = std::make_shared<Point>(glm::vec3(xpos, ypos, zpos), shader);
+				//point->AddOwner(shared_from_this());
 				points.push_back(point);
 				if (i == 0) {
 					polygons.push_back(std::make_shared<Line>(shader));

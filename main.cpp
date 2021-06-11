@@ -542,7 +542,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 				}
 			}
 			for (auto& virt : obj->GetVirtualObjects()) {
-				auto vr_point = dynamic_cast<Point*>(virt);
+				auto vr_point = std::dynamic_pointer_cast<Point>(virt);
 				if (vr_point) {
 					glm::vec3 point2 = vr_point->GetPosition();
 					glm::vec3 toPoint2(point2 - glm::vec3(lRayStart_world));
@@ -551,7 +551,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 					if (length < minLength && length < 0.1f)
 					{
 						minLength = length;
-						closest = vr_point;
+						closest = vr_point.get();
 					}
 				}
 			}
@@ -1045,6 +1045,46 @@ void remove_unnecessary_points() {
 	else return;
 	remove_unnecessary_points();
 }
+
+void merge_selected_points() {
+	auto selected_points = std::vector<std::shared_ptr<Point>>();
+	glm::vec3 center_pos = { 0,0,0 };
+	for (auto& obj : objects_list) {
+		if (dynamic_cast<Point*>(obj.get())) {
+			if (obj->selected) {
+				selected_points.push_back(std::dynamic_pointer_cast<Point>(obj));
+				center_pos += obj->GetPosition();
+			}
+		}
+		for (auto& virt : obj->GetVirtualObjects()) {
+			auto vr_point = dynamic_pointer_cast<Point>(virt);
+			if (vr_point->selected) {
+				selected_points.push_back(vr_point);
+				center_pos += vr_point->GetPosition();
+			}
+		}
+	}
+
+	if (selected_points.size() == 0) return;
+
+	center_pos /= selected_points.size();
+
+	auto& left = selected_points.front();
+	left->MoveObjectTo(center_pos);
+	for (int i = 1; i < selected_points.size();i++) {
+		auto& pointPtr = selected_points[i];
+		auto point = pointPtr.get();
+		point->UpdateOwners(left);
+		left->AddUniqueOwners(point->owners);
+		for (int j = 0; j < objects_list.size(); j++) {
+			auto point_o = objects_list[j];
+			if (point_o->CompareName(point->constname)) {
+				objects_list.erase(objects_list.begin() + j);
+			}
+		}
+	}
+}
+
 void create_gui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -1061,7 +1101,9 @@ void create_gui() {
 	move_selected_to_cursor();
 	adding_new_objects_gui();
 	if (ImGui::Button("Erase unused points")) remove_unnecessary_points();
+	if (ImGui::Button("Merge Selected points")) merge_selected_points();
 	objects_on_scene_gui();
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();
 }
+

@@ -4,7 +4,8 @@
 #include "VirtualPoint.h"
 
 class BezierFlakeC0 :
-    public Bezier
+    public Bezier,
+    public std::enable_shared_from_this<Object>
 {
 public:
     BezierFlakeC0(Shader sh, int type, glm::uvec2 flakes_count, glm::vec2 sizes) :Bezier(sh), polygons() {
@@ -16,11 +17,11 @@ public:
         number_of_divisions[1] = 4;
         type_ = type;
         this->color = { 1.0f,1.0f,1.0f,1.0f };
-        update_object();
+        Update();
         shader = Shader("tes_shader.vs", "tes_shader.fs", "tes_shader.tcs", "tes_shader.tes");
     }
 
-    BezierFlakeC0(Shader sh) :Bezier(sh), polygons() {}
+    BezierFlakeC0(Shader sh) :Bezier(sh), polygons() {};
     BezierFlakeC0(Shader sh, glm::uvec2 flakes_count, glm::uvec2 divisions_, std::vector<std::shared_ptr<Point>> points);
 
     void Serialize(xml_document<>& document, xml_node<>* scene) override;
@@ -28,9 +29,10 @@ public:
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override;
 
-    std::vector<Object*> GetVirtualObjects();
+    std::vector<std::shared_ptr<Object>> GetVirtualObjects();
 
     void Update() override;
+    void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) override;
 
     static unsigned int counter;
 protected:
@@ -41,7 +43,8 @@ protected:
     glm::uvec2 num_of_flakes;
     void update_object() override;
     int type_{ 0 };
-
+    bool owners_added{ false };
+    std::shared_ptr<Object> GetSharedFromThis() { return shared_from_this(); }
 private:
     virtual void create_vertices(int type, glm::uvec2 flakes_count, glm::vec2 sizes);
 

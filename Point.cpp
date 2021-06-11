@@ -12,6 +12,16 @@ Point::Point(glm::vec3 position, glm::vec4 color, Shader sh):Object(sh,7)
 	MoveObject(position);
 }
 
+Point::Point(glm::vec3 position, Shader sh) :Object(sh, 7)
+{
+	this->color = glm::vec4(54/255.0f, 134 / 255.0f, 199 / 255.0f,1.0f);
+	update_object();
+	sprintf_s(name, 512, ("Point " + std::to_string(counter)).c_str());
+	constname = "Point " + std::to_string(counter);
+	counter++;
+	MoveObject(position);
+}
+
 Point::Point(glm::vec3 position, glm::vec4 color, Shader sh, bool virt) :Object(sh, 7)
 {
 	this->color = color;
@@ -85,6 +95,31 @@ void Point::CreateMenu()
 void Point::AddOwner(std::shared_ptr<Object> owner)
 {
 	owners.push_back(owner);
+}
+
+void Point::AddUniqueOwners(std::vector<std::weak_ptr<Object>> owner_list)
+{
+	for (auto& own : owner_list) {
+		if (own.expired())continue;
+		bool unique = true;
+		for (auto& loc : owners) {
+			if (loc.expired()) continue;
+			if (loc.lock() == own.lock()) {
+				unique = false;
+				break;
+			}
+		}
+		if (unique)
+			owners.push_back(own);
+	}
+}
+
+void Point::UpdateOwners(std::shared_ptr<Point>& new_point)
+{
+	for (auto& owner : owners) {
+		if (owner.expired()) continue;
+		owner.lock()->UpdateMyPointer(constname, new_point);
+	}
 }
 
 void Point::update_object()

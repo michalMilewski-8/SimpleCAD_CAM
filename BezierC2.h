@@ -15,8 +15,9 @@ public:
 
     void AddPointToCurve(std::shared_ptr<Point>& point) override;
     void Update() override;
-    std::vector<Object*> GetVirtualObjects() override;
+    std::vector<std::shared_ptr<Object>> GetVirtualObjects() override;
     void Serialize(xml_document<>& document, xml_node<>* scene) override;
+    void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) override;
 
     static unsigned int counter;
 private:
@@ -49,7 +50,7 @@ private:
     glm::vec3 sub_sum[5];
     std::vector<std::weak_ptr<Point>> points;
     std::vector<glm::vec3> de_points_;
-    std::vector<std::shared_ptr<VirtualPoint>> bezier_points;
+    std::vector<std::shared_ptr<Point>> bezier_points;
     std::vector<glm::vec3> points_;
 };
 

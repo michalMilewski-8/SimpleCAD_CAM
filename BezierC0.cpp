@@ -153,6 +153,18 @@ void BezierC0::Serialize(xml_document<>& document, xml_node<>* scene)
 	scene->append_node(figure);
 }
 
+void BezierC0::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object> new_point)
+{
+	for (int i = 0; i < points.size(); i++) {
+		if (points[i].expired()) continue;
+		auto point = points[i].lock();
+		if (point->CompareName(constname_)) {
+			points.erase(points.begin() + i);
+			points.insert(points.begin() + i, std::dynamic_pointer_cast<Point>(new_point));
+		}
+	}
+}
+
 void BezierC0::update_object()
 {
 	lines.clear();

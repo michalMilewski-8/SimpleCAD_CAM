@@ -186,11 +186,23 @@ void BezierInterpol::Serialize(xml_document<>& document, xml_node<>* scene)
 	scene->append_node(figure);
 }
 
-std::vector<Object*> BezierInterpol::GetVirtualObjects()
+std::vector<std::shared_ptr<Object>> BezierInterpol::GetVirtualObjects()
 {
-	auto res = std::vector<Object*>();
+	auto res = std::vector<std::shared_ptr<Object>>();
 	// TODO zastanowiæ siê czy coœ zwracaæ
 	return res;
+}
+
+void BezierInterpol::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object> new_point)
+{
+	for (int i = 0; i < points.size(); i++) {
+		if (points[i].expired()) continue;
+		auto point = points[i].lock();
+		if (point->CompareName(constname_)) {
+			points.erase(points.begin() + i);
+			points.insert(points.begin() + i, std::dynamic_pointer_cast<Point>(new_point));
+		}
+	}
 }
 
 void BezierInterpol::update_object()
@@ -436,7 +448,7 @@ void BezierInterpol::generate_bezier_points()
 
 void BezierInterpol::add_bezier_point(glm::vec3 position)
 {
-	auto point = std::make_shared<VirtualPoint>(position, shader);
+	auto point = std::make_shared<Point>(position, shader);
 	bezier_points.push_back(point);
 	point->AddOwner(shared_from_this());
 	polygon_bezier->AddPoint(point);
@@ -445,7 +457,7 @@ void BezierInterpol::add_bezier_point(glm::vec3 position)
 
 void BezierInterpol::add_de_boor_point(glm::vec3 position)
 {
-	auto point = std::make_shared<VirtualPoint>(position, shader);
+	auto point = std::make_shared<Point>(position, shader);
 	de_boor_points.push_back(point);
 	point->AddOwner(shared_from_this());
 	polygon->AddPoint(point);

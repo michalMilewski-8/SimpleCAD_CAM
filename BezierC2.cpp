@@ -165,11 +165,11 @@ void BezierC2::Update()
 	polygon_bezier->Update();
 }
 
-std::vector<Object*> BezierC2::GetVirtualObjects()
+std::vector<std::shared_ptr<Object>> BezierC2::GetVirtualObjects()
 {
-	auto res = std::vector<Object*>();
+	auto res = std::vector<std::shared_ptr<Object>>();
 	for (auto& pt : bezier_points) {
-		res.push_back(pt.get());
+		res.push_back(pt);
 	}
 	return res;
 }
@@ -189,6 +189,18 @@ void BezierC2::Serialize(xml_document<>& document, xml_node<>* scene)
 	}
 	figure->append_node(pointsNode);
 	scene->append_node(figure);
+}
+
+void BezierC2::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object> new_point)
+{
+	for (int i = 0; i < points.size(); i++) {
+		if (points[i].expired()) continue;
+		auto point = points[i].lock();
+		if (point->CompareName(constname_)) {
+			points.erase(points.begin() + i);
+			points.insert(points.begin() + i, std::dynamic_pointer_cast<Point>(new_point));
+		}
+	}                                       
 }
 
 void BezierC2::update_object()
@@ -215,7 +227,7 @@ void BezierC2::update_object()
 		k = 0;
 		int moved_point_index = -1;
 		for (auto& pt : points_) {
-			if (k >= bezier_points.size() || pt != bezier_points[k]->getPosition()) {
+			if (k >= bezier_points.size() || pt != bezier_points[k]->GetPosition()) {
 				moved_point_index = k;
 				break;
 			}
@@ -382,7 +394,7 @@ void BezierC2::generate_bezier_points()
 
 void BezierC2::add_bezier_point(glm::vec3 position)
 {
-	auto point = std::make_shared<VirtualPoint>(position, shader);
+	auto point = std::make_shared<Point>(position, shader);
 	bezier_points.push_back(point);
 	point->AddOwner(shared_from_this());
 	polygon_bezier->AddPoint(point);
