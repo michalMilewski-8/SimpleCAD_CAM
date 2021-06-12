@@ -31,6 +31,9 @@ public:
 
     std::vector<std::shared_ptr<Object>> GetVirtualObjects();
 
+    void Select() override;
+    void UnSelect() override;
+
     void Update() override;
     void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) override;
 

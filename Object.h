@@ -36,8 +36,8 @@ public:
 	void RotateObject(glm::vec3 movement);
 	void RotateObject(glm::quat rotation);
 	void ResizeObject(glm::vec3 movement);
-	void Select();
-	void UnSelect();
+	virtual void Select();
+	virtual void UnSelect();
 	void SetName(std::string name_);
 	bool CompareName(std::string name_);
 	virtual void Update() {};

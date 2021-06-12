@@ -1085,6 +1085,17 @@ void merge_selected_points() {
 	}
 }
 
+void fill_the_selected_hole() {
+	std::vector<shared_ptr<BezierFlakeC0>> bezier_patches = {};
+	for (auto& obj : objects_list) {
+		auto br = std::dynamic_pointer_cast<BezierFlakeC0>(obj);
+		if (br && br->selected) {
+			bezier_patches.push_back(br);
+		}
+	}
+	if (bezier_patches.size() != 3) return;
+}
+
 void create_gui() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -1102,6 +1113,7 @@ void create_gui() {
 	adding_new_objects_gui();
 	if (ImGui::Button("Erase unused points")) remove_unnecessary_points();
 	if (ImGui::Button("Merge Selected points")) merge_selected_points();
+	if (ImGui::Button("Fill hole with gregory patch")) fill_the_selected_hole();
 	objects_on_scene_gui();
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::End();

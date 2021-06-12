@@ -53,7 +53,8 @@ void BezierFlakeC0::DrawObject(glm::mat4 mvp_)
 		need_update = false;
 	}
 
-	Object::DrawObject(mvp_);
+	mvp = mvp_;
+	//Object::DrawObject(mvp_);
 
 	if (draw_polygon)
 		for (auto& pol : polygons)
@@ -90,6 +91,22 @@ std::vector<std::shared_ptr<Object>> BezierFlakeC0::GetVirtualObjects()
 	return res;
 }
 
+void BezierFlakeC0::Select()
+{
+	Object::Select();
+	for (auto& point : points) {
+		point->Select();
+	}
+}
+
+void BezierFlakeC0::UnSelect()
+{
+	Object::UnSelect();
+	for (auto& point : points) {
+		point->UnSelect();
+	}
+}
+
 void BezierFlakeC0::CreateMenu()
 {
 	float color_new[4];
@@ -112,6 +129,8 @@ void BezierFlakeC0::CreateMenu()
 			color_new[i] = color[i];
 		ImGui::Checkbox("Selected", &selected);
 		if (selected != was_selected_in_last_frame) {
+			if (selected) Select();
+			else UnSelect();
 			update_object();
 			was_selected_in_last_frame = selected;
 		}
