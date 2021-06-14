@@ -72,7 +72,7 @@ void TriangularGregoryPatch::update_object()
 
 		gregory_points[i][0] = T11;
 		gregory_points[i][1] = T11 + (T11 - T21);
-		
+
 		gregory_points[i][4] = S12;
 		gregory_points[i][5] = S12 + (S12 - S22);
 		gregory_points[i][6] = S12 + (S12 - S22);
@@ -97,7 +97,7 @@ void TriangularGregoryPatch::update_object()
 
 	for (int i = 0; i < 3; i++) {
 		gregory_points[i][3] = P;
-		gregory_points[i][2] = (2.0f * Q[i] + P)/3.0f;
+		gregory_points[i][2] = (2.0f * Q[i] + P) / 3.0f;
 		gregory_points[i][7] = gregory_points[i][5] + (gregory_points[i][2] - gregory_points[i][1]);
 		int g = (i + 2) % 3;
 		gregory_points[g][9] = (2.0f * Q[i] + P) / 3.0f;
@@ -149,33 +149,31 @@ void TriangularGregoryPatch::find_conected_patches(std::vector<std::vector<std::
 
 bool TriangularGregoryPatch::check_patches_connection(std::vector<std::vector<std::shared_ptr<Point>>>& patch1, std::vector<std::vector<std::shared_ptr<Point>>>& patch2, std::vector<std::vector<std::shared_ptr<Point>>>& patch3)
 {
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			for (int k = 0; k < 8; k++) {
+	for (int i = 0; i <= 8; i++) {
+		for (int j = 0; j <= 8; j++) {
+			for (int k = 0; k <= 8; k++) {
+				patch1[0][0]->constname;
+				patch3[3][0]->constname;
 
+				patch1[3][0]->constname;
+				patch2[0][0]->constname;
+
+				patch2[3][0]->constname;
+				patch3[0][0]->constname;
 				if (patch1[0][0]->CompareName(patch3[3][0]->constname) && patch1[3][0]->CompareName(patch2[0][0]->constname) && patch2[3][0]->CompareName(patch3[0][0]->constname)) {
 					return true;
 				}
-				if (k % 2 == 1) {
+				if (k % 2 == 1)
 					RotatePatch(patch3);
-				}
-				else {
-					SwitchPatch(patch3);
-				}
+				SwitchPatch(patch3);
 			}
-			if (j % 2 == 1) {
+			if (j % 2 == 1)
 				RotatePatch(patch2);
-			}
-			else {
-				SwitchPatch(patch2);
-			}
+			SwitchPatch(patch2);
 		}
-		if (i % 2 == 1) {
+		if (i % 2 == 1)
 			RotatePatch(patch1);
-		}
-		else {
-			SwitchPatch(patch1);
-		}
+		SwitchPatch(patch1);
 	}
 	return false;
 }

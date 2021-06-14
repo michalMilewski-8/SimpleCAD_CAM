@@ -63,7 +63,11 @@ private:
         res[0][2] = patch[2][3];
         res[0][3] = patch[3][3];
 
-        patch = res;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                patch[i][j] = res[i][j];
+            }
+        }
     }
 
     template<class T>
@@ -95,7 +99,11 @@ private:
         res[1][3] = patch[2][3];
         res[0][3] = patch[3][3];
 
-        patch = res;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                patch[i][j] = res[i][j];
+            }
+        }
     }
 };
 
