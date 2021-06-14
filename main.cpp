@@ -21,6 +21,7 @@
 #include "BezierInterpol.h"
 #include "BezierFlakeC0.h"
 #include "BezierFlakeC2.h"
+#include "TriangularGregoryPatch.h"
 #include "Virtual.h"
 
 #include "imgui.h"
@@ -224,7 +225,8 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 1, glm::uvec2(4, 4), glm::vec2(1, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 1, glm::uvec2(3, 3), glm::vec2(1, 1)));
+	objects_list.back()->Select();
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -1093,7 +1095,21 @@ void fill_the_selected_hole() {
 			bezier_patches.push_back(br);
 		}
 	}
-	if (bezier_patches.size() != 3) return;
+	if (bezier_patches.size() > 3) return;
+
+	auto patches = std::vector<std::vector<std::vector<std::shared_ptr<Point>>>>();
+
+	for (auto& patch : bezier_patches) {
+		auto res = patch->GetAllPatches();
+		patches.insert(patches.end(), res.begin(), res.end());
+	}
+
+	auto gregory = std::make_shared<TriangularGregoryPatch>(patches, ourShader);
+
+	if (gregory->IsProper()) {
+		gregory->UpdateOwnership();
+		objects_list.push_back(gregory);
+	}
 }
 
 void create_gui() {

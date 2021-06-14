@@ -177,6 +177,25 @@ void BezierFlakeC0::UpdateMyPointer(std::string constname_,const std::shared_ptr
 	}
 }
 
+std::vector<std::vector<std::vector<std::shared_ptr<Point>>>> BezierFlakeC0::GetAllPatches()
+{
+	auto res = std::vector<std::vector<std::vector<std::shared_ptr<Point>>>>();
+	
+	for (int i = 0; i < num_of_flakes.x * num_of_flakes.y; i++) {
+		auto patch = std::vector<std::vector<std::shared_ptr<Point>>>();
+		for (int j = 0; j < 4; j++) {
+			auto line = std::vector<std::shared_ptr<Point>>();
+			for (int k = 0; k < 4; k++) {
+				line.push_back(points[patches[i * 16 + j * 4 + k]]);
+			}
+			patch.push_back(line);
+		}
+		res.push_back(patch);
+	}
+
+	return res;
+}
+
 void BezierFlakeC0::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2 sizes)
 {
 	switch (type) {

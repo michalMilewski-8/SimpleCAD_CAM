@@ -37,6 +37,8 @@ public:
     void Update() override;
     void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) override;
 
+    std::vector<std::vector<std::vector<std::shared_ptr<Point>>>> GetAllPatches();
+
     static unsigned int counter;
 protected:
     std::vector<unsigned int> patches;

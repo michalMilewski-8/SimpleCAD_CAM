@@ -81,6 +81,12 @@
     <ClCompile Include="Dependencies\include\ImGuiFileDialog-Lib_Only\ImGuiFileDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TriangularGregoryPatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GregoryPatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -173,6 +179,12 @@
     <ClInclude Include="Dependencies\include\ImGuiFileDialog-Lib_Only\dirent\dirent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TriangularGregoryPatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GregoryPatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader.vs" />
@@ -188,5 +200,8 @@
     <None Include="tes_shader.tcs" />
     <None Include="tes_shader.tes" />
     <None Include="tes_shader_C2.tes" />
+    <None Include="tes_grzegorz_shader.tes" />
+    <None Include="tes_grzegorz_shader.tcs" />
+    <None Include="..\..\..\Piotrkowe repoa\MGR\sem1\Modelowanie geometryczne\Interfejs\shaders\gregoryDomainShader.ds" />
   </ItemGroup>
 </Project>

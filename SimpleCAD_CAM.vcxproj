@@ -159,6 +159,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cursor.cpp" />
     <ClCompile Include="Dependencies\include\ImGuiFileDialog-Lib_Only\ImGuiFileDialog.cpp" />
+    <ClCompile Include="GregoryPatch.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="imgui_draw.cpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="Torus.cpp" />
+    <ClCompile Include="TriangularGregoryPatch.cpp" />
     <ClCompile Include="VirtualPoint.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +192,7 @@
     <ClInclude Include="Dependencies\include\rapidxml-1.13\rapidxml_iterators.hpp" />
     <ClInclude Include="Dependencies\include\rapidxml-1.13\rapidxml_print.hpp" />
     <ClInclude Include="Dependencies\include\rapidxml-1.13\rapidxml_utils.hpp" />
+    <ClInclude Include="GregoryPatch.h" />
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />
     <ClInclude Include="imgui_impl_glfw.h" />
@@ -203,10 +206,12 @@
     <ClInclude Include="Point.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Torus.h" />
+    <ClInclude Include="TriangularGregoryPatch.h" />
     <ClInclude Include="Virtual.h" />
     <ClInclude Include="VirtualPoint.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\Piotrkowe repoa\MGR\sem1\Modelowanie geometryczne\Interfejs\shaders\gregoryDomainShader.ds" />
     <None Include="shader.fs" />
     <None Include="shader_bezier_c0.gs" />
     <None Include="shader.vs" />
@@ -215,6 +220,8 @@
     <None Include="shader_grid.vs" />
     <None Include="stereo.fs" />
     <None Include="stereo.vs" />
+    <None Include="tes_grzegorz_shader.tes" />
+    <None Include="tes_grzegorz_shader.tcs" />
     <None Include="tes_shader.fs" />
     <None Include="tes_shader.tcs" />
     <None Include="tes_shader.tes" />
