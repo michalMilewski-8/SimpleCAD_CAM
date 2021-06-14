@@ -1,5 +1,7 @@
 #pragma once
 #include"Object.h"
+#include "Line.h"
+#include "Point.h"
 class GregoryPatch : Object
 {
 public:
@@ -25,10 +27,12 @@ public:
 	static unsigned int counter;
 
 private:
+	std::vector<std::shared_ptr<Line>> polygon {};
 	bool draw_polygon{ false };
 	bool was_draw_polygon;
 	int number_of_divisions[2];
 	std::vector<glm::vec3> points;
+	std::vector<std::shared_ptr<Point>> points_greg;
 	std::vector<float> points_;
 	std::vector<unsigned int> indexes;
 	void update_object() override;

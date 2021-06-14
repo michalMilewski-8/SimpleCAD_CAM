@@ -1077,6 +1077,7 @@ void merge_selected_points() {
 		auto& pointPtr = selected_points[i];
 		auto point = pointPtr.get();
 		point->UpdateOwners(left);
+		point->Update();
 		left->AddUniqueOwners(point->owners);
 		for (int j = 0; j < objects_list.size(); j++) {
 			auto point_o = objects_list[j];
@@ -1085,6 +1086,7 @@ void merge_selected_points() {
 			}
 		}
 	}
+	left->Update();
 }
 
 void fill_the_selected_hole() {

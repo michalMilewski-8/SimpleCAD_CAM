@@ -101,11 +101,12 @@ void TriangularGregoryPatch::update_object()
 		gregory_points[i][7] = gregory_points[i][5] + (gregory_points[i][2] - gregory_points[i][1]);
 		int g = (i + 2) % 3;
 		gregory_points[g][9] = (2.0f * Q[i] + P) / 3.0f;
-		gregory_points[i][8] = gregory_points[g][13] + (gregory_points[g][9] - gregory_points[g][15]);
+		gregory_points[g][8] = gregory_points[g][13] + (gregory_points[g][9] - gregory_points[g][15]);
 
 	}
 	int i = 0;
 	for (auto& greg : patches_gr) {
+		if (greg)
 		greg->UpdatePoints(gregory_points[i]);
 		i++;
 	}
@@ -209,16 +210,17 @@ void TriangularGregoryPatch::CreateMenu()
 
 		if (ImGui::CollapsingHeader("De Bohr Points on Curve")) {
 			for (int i = 0; i < patches_gr.size(); i++) {
-				patches_gr[i];
-				patches_gr[i]->CreateMenu(); ImGui::SameLine();
-				sprintf_s(buf, "Remove###%sRm%d", patches_gr[i]->Name(), i);
-				if (ImGui::Button(buf)) {
-					to_delete = i;
+				if (patches_gr[i]) {
+					patches_gr[i]->CreateMenu(); ImGui::SameLine();
+					sprintf_s(buf, "Remove###%sRm%d", patches_gr[i]->Name(), i);
+					if (ImGui::Button(buf)) {
+						to_delete = i;
+					}
 				}
 			}
 		}
 		if (to_delete >= 0) {
-			patches_gr.erase(patches_gr.begin() + to_delete);
+			patches_gr[to_delete].release();
 			//patches_gr->DeletePoint(to_delete);
 			Update();
 		}
@@ -239,6 +241,7 @@ void TriangularGregoryPatch::DrawObject(glm::mat4 mvp_)
 	mvp = mvp_;
 
 	for (auto& greg : patches_gr) {
+		if(greg)
 		greg->DrawObject(mvp);
 	}
 }
@@ -260,5 +263,6 @@ void TriangularGregoryPatch::Update()
 {
 	need_update = true;
 	for (auto& polygon : patches_gr)
-		polygon->Update();
+		if(polygon)
+			polygon->Update();
 }

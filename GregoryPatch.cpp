@@ -7,11 +7,16 @@ void GregoryPatch::UpdatePoints(glm::vec3 points_new[20])
 	points.clear();
 	points_.clear();
 	for (int i = 0; i < 20; i++) {
+		if (points_greg.size() < 20)
+			points_greg.push_back(std::make_shared<Point>(points_new[i], glm::vec4(196 / 255.0f, 157 / 255.0f, 29 / 255.0f, 1.0f), Shader("shader.vs", "shader.fs")));
+		else
+			points_greg[i]->MoveObjectTo(points_new[i]);
 		points.push_back(points_new[i]);
 		points_.push_back(points_new[i].x);
 		points_.push_back(points_new[i].y);
 		points_.push_back(points_new[i].z);
 	}
+
 	update_object();
 }
 
@@ -31,13 +36,14 @@ void GregoryPatch::DrawObject(glm::mat4 mvp_)
 	mvp = mvp_;
 	//Object::DrawObject(mvp_);
 
-	//if (draw_polygon)
-	//	for (auto& pol : polygons)
-	//		pol->DrawObject(mvp);
+	if (draw_polygon) {
+		for (auto& pol : polygon)
+			pol->DrawObject(mvp);
+		for (auto& point : points_greg)
+			point->DrawObject(mvp);
+	}
 
-	//for (auto& point : points) {
-	//	point->DrawObject(mvp);
-	//}
+
 
 	shader.use();
 	glPatchParameteri(GL_PATCH_VERTICES, 20);
@@ -94,6 +100,55 @@ void GregoryPatch::CreateMenu()
 
 void GregoryPatch::update_object()
 {
+	if (polygon.size() < 9 && points_greg.size() == 20) {
+		auto shader = Shader("shader.vs", "shader.fs");
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[0]);
+		polygon.back()->AddPoint(points_greg[1]);
+		polygon.back()->AddPoint(points_greg[2]);
+		polygon.back()->AddPoint(points_greg[3]);
+		polygon.back()->AddPoint(points_greg[9]);
+		polygon.back()->AddPoint(points_greg[15]);
+		polygon.back()->AddPoint(points_greg[19]);
+		polygon.back()->AddPoint(points_greg[18]);
+		polygon.back()->AddPoint(points_greg[17]);
+		polygon.back()->AddPoint(points_greg[16]);
+		polygon.back()->AddPoint(points_greg[10]);
+		polygon.back()->AddPoint(points_greg[4]);
+		polygon.back()->AddPoint(points_greg[0]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[1]);
+		polygon.back()->AddPoint(points_greg[6]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[4]);
+		polygon.back()->AddPoint(points_greg[5]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[10]);
+		polygon.back()->AddPoint(points_greg[11]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[17]);
+		polygon.back()->AddPoint(points_greg[12]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[18]);
+		polygon.back()->AddPoint(points_greg[13]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[15]);
+		polygon.back()->AddPoint(points_greg[14]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[9]);
+		polygon.back()->AddPoint(points_greg[8]);
+
+		polygon.push_back(std::make_shared<Line>(shader));
+		polygon.back()->AddPoint(points_greg[2]);
+		polygon.back()->AddPoint(points_greg[7]);
+	}
 	// 1. bind Vertex Array Object
 	glBindVertexArray(VAO);
 	// 2. copy our vertices array in a vertex buffer for OpenGL to use
