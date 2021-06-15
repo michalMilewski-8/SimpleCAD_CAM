@@ -153,15 +153,39 @@ bool TriangularGregoryPatch::check_patches_connection(std::vector<std::vector<st
 	for (int i = 0; i <= 8; i++) {
 		for (int j = 0; j <= 8; j++) {
 			for (int k = 0; k <= 8; k++) {
-				patch1[0][0]->constname;
-				patch3[3][0]->constname;
-
-				patch1[3][0]->constname;
-				patch2[0][0]->constname;
-
-				patch2[3][0]->constname;
-				patch3[0][0]->constname;
 				if (patch1[0][0]->CompareName(patch3[3][0]->constname) && patch1[3][0]->CompareName(patch2[0][0]->constname) && patch2[3][0]->CompareName(patch3[0][0]->constname)) {
+					std::vector<void*> names1 = {};
+					std::vector<void*> namesin2 = {};
+					bool true_to_return = true;
+					for (auto& owner : patch1[0][0]->owners) {
+						if (owner.expired()) continue;
+						auto ow = std::dynamic_pointer_cast<TriangularGregoryPatch>(owner.lock());
+						if(ow)
+						names1.push_back(ow.get());
+					}
+					for (auto& owner : patch1[3][0]->owners) {
+						if (owner.expired()) continue;
+						auto ow = std::dynamic_pointer_cast<TriangularGregoryPatch>(owner.lock());
+						if (ow)
+						for (auto& name : names1) {
+							if (ow.get() == name) {
+								namesin2.push_back(ow.get());
+								break;
+							}
+						}
+					}
+					for (auto& owner : patch2[3][0]->owners) {
+						if (owner.expired()) continue;
+						auto ow = std::dynamic_pointer_cast<TriangularGregoryPatch>(owner.lock());
+						if (ow)
+						for (auto& name : namesin2) {
+							if (ow.get() == name) {
+								true_to_return = false;
+								break;
+							}
+						}
+					}
+					if(true_to_return)
 					return true;
 				}
 				if (k % 2 == 1)
