@@ -153,7 +153,7 @@ bool TriangularGregoryPatch::check_patches_connection(std::vector<std::vector<st
 	for (int i = 0; i <= 8; i++) {
 		for (int j = 0; j <= 8; j++) {
 			for (int k = 0; k <= 8; k++) {
-				if (patch1[0][0]->CompareName(patch3[3][0]->constname) && patch1[3][0]->CompareName(patch2[0][0]->constname) && patch2[3][0]->CompareName(patch3[0][0]->constname)) {
+				if (patch1[0][0].get() ==patch3[3][0].get() && patch1[3][0].get() == patch2[0][0].get() && patch2[3][0].get() == patch3[0][0].get()) {
 					std::vector<void*> names1 = {};
 					std::vector<void*> namesin2 = {};
 					bool true_to_return = true;
