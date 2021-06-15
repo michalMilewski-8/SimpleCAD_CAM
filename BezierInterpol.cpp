@@ -19,6 +19,7 @@ BezierInterpol::BezierInterpol(Shader& sh) :
 
 void BezierInterpol::DrawObject(glm::mat4 mvp_)
 {
+	moved = false;
 	if (points.size() < 2) return;
 
 	if (need_update) {

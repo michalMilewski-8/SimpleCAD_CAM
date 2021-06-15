@@ -19,6 +19,7 @@ BezierC2::BezierC2(Shader& sh) :
 
 void BezierC2::DrawObject(glm::mat4 mvp_)
 {
+	moved = false;
 	if (points.size() < 2) return;
 
 	if (need_update) {

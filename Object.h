@@ -47,7 +47,7 @@ public:
 	virtual void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) {};
 
 	static glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);
-	
+	void InformOwners() { inform_owner_of_change(); }
 	glm::vec3 GetPosition();
 
 	unsigned int* screen_width;
@@ -85,5 +85,6 @@ protected:
 	glm::vec4 color;
 
 	Shader shader;
+	bool moved{ false };
 };
 

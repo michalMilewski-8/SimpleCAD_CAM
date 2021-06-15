@@ -43,6 +43,7 @@ void Cursor::SetCursorPosition(glm::vec3 position)
 
 void Cursor::DrawObject(glm::mat4 mvp)
 {
+	moved = false;
 	Object::DrawObject(mvp);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawElements(GL_LINES, points.size(), GL_UNSIGNED_INT, 0);

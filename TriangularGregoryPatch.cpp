@@ -256,6 +256,7 @@ void TriangularGregoryPatch::CreateMenu()
 
 void TriangularGregoryPatch::DrawObject(glm::mat4 mvp_)
 {
+	moved = false;
 	if (!is_proper) return;
 	if (need_update) {
 		update_object();

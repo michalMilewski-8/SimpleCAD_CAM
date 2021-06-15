@@ -13,6 +13,7 @@ Line::Line(Shader& sh) : Object(sh, 7)
 
 void Line::DrawObject(glm::mat4 mvp_)
 {
+	moved = false;
 	if (points.size() < 2) return;
 
 	if (need_update) {

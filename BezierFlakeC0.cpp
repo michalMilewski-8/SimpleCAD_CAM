@@ -48,6 +48,7 @@ void BezierFlakeC0::Serialize(xml_document<>& document, xml_node<>* scene)
 
 void BezierFlakeC0::DrawObject(glm::mat4 mvp_)
 {
+	moved = false;
 	if (need_update) {
 		update_object();
 		need_update = false;

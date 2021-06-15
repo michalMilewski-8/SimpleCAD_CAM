@@ -27,6 +27,7 @@ void GregoryPatch::Update()
 
 void GregoryPatch::DrawObject(glm::mat4 mvp_)
 {
+	moved = false;
 	if (need_update) {
 		update_object();
 		need_update = false;

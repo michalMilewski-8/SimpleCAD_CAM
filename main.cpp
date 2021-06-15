@@ -1087,6 +1087,7 @@ void merge_selected_points() {
 		}
 	}
 	left->Update();
+	left->InformOwners();
 }
 
 void fill_the_selected_hole() {
@@ -1097,7 +1098,7 @@ void fill_the_selected_hole() {
 			bezier_patches.push_back(br);
 		}
 	}
-	if (bezier_patches.size() > 3) return;
+	//if (bezier_patches.size() > 3) return;
 
 	auto patches = std::vector<std::vector<std::vector<std::shared_ptr<Point>>>>();
 

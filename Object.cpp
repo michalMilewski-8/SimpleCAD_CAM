@@ -48,6 +48,7 @@ Object::~Object()
 
 void Object::DrawObject(glm::mat4 mvp_)
 {	
+	moved = false;
 	mvp = mvp_ * translate * rotate * resize;
 	shader.use();
 	int projectionLoc = glGetUniformLocation(shader.ID, "mvp");
@@ -58,6 +59,7 @@ void Object::DrawObject(glm::mat4 mvp_)
 
 void Object::MoveObject(glm::vec3 movement)
 {
+	if (moved) return;
 	position += movement;
 	glm::mat4 translate_ = glm::mat4(1.0f);
 	translate_[3][0] = position.x;
@@ -66,10 +68,12 @@ void Object::MoveObject(glm::vec3 movement)
 
 	translate = translate_ ;
 	inform_owner_of_change();
+	moved = true;
 }
 
 void Object::MoveObjectTo(glm::vec3 movement)
 {
+	if (moved) return;
 	position = movement;
 	glm::mat4 translate_ = glm::mat4(1.0f);
 	translate_[3][0] = movement.x;
@@ -78,10 +82,12 @@ void Object::MoveObjectTo(glm::vec3 movement)
 
 	translate = translate_;
 	inform_owner_of_change();
+	moved = true;
 }
 
 void Object::RotateObject(glm::vec3 angles)
 {
+	if (moved) return;
 	angle += angles;
 	glm::mat4 x_rotate = glm::mat4(1.0f);
 	x_rotate[1][1] = glm::cos(glm::radians(angles.y));
@@ -103,10 +109,12 @@ void Object::RotateObject(glm::vec3 angles)
 
 	rotate = z_rotate * y_rotate * x_rotate * rotate;
 	inform_owner_of_change();
+	moved = true;
 }
 
 void Object::RotateObject(glm::quat rotation)
 {
+	if (moved) return;
 	quaternion_rotation = rotation * quaternion_rotation;
 
 	rotate = glm::mat4(1.0f);
@@ -124,10 +132,12 @@ void Object::RotateObject(glm::quat rotation)
 	rotate[2][2] = 1 - 2 * quaternion_rotation.x * quaternion_rotation.x - 2 * quaternion_rotation.y * quaternion_rotation.y;
 
 	inform_owner_of_change();
+	moved = true;
 }
 
 void Object::ResizeObject(glm::vec3 movement)
 {
+	if (moved) return;
 	scale *= movement;
 	glm::mat4 scale2 = glm::mat4(1.0f);
 	scale2[0][0] = scale.x;
@@ -136,6 +146,7 @@ void Object::ResizeObject(glm::vec3 movement)
 
 	resize = scale2 ;
 	inform_owner_of_change();
+	moved = true;
 }
 
 void Object::Select()
