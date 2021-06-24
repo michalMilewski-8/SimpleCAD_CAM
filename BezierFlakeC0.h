@@ -29,6 +29,10 @@ public:
     void DrawObject(glm::mat4 mvp) override;
     void CreateMenu() override;
 
+    std::vector<std::function<glm::vec3(double, double)>> GetParametrisations() override;
+    std::vector<std::function<glm::vec3(double, double)>> GetUParametrisations() override;
+    std::vector<std::function<glm::vec3(double, double)>> GetVParametrisations() override;
+
     std::vector<std::shared_ptr<Object>> GetVirtualObjects();
 
     void Select() override;

@@ -60,6 +60,392 @@ void BezierFlakeC2::Serialize(xml_document<>& document, xml_node<>* scene)
 	scene->append_node(figure);
 }
 
+std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetParametrisations()
+{
+	auto result = std::vector<std::function<glm::vec3(double, double)>>();
+
+	auto decastelieu = [](float t, glm::vec3 B0_, glm::vec3 B1_, glm::vec3 B2_, glm::vec3 B3_) {
+		float T0 = -1.0f;
+		float T1 = 0.0f;
+		float T2 = 1.0f;
+		float T3 = 2.0f;
+		float T4 = 3.0f;
+		float Tm1 = -2.0f;
+
+		float A1 = T2 - t;
+		float A2 = T3 - t;
+		float A3 = T4 - t;
+		float B1 = t - T1;
+		float B2 = t - T0;
+		float B3 = t - Tm1;
+
+		float N1 = 1;
+		float N2 = 0;
+		float N3 = 0;
+		float N4 = 0;
+
+		float saved = 0.0f;
+		float term = 0.0f;
+
+		term = N1 / (A1 + B1);
+		N1 = saved + A1 * term;
+		saved = B1 * term;
+
+		N2 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B2);
+		N1 = saved + A1 * term;
+		saved = B2 * term;
+
+		term = N2 / (A2 + B1);
+		N2 = saved + A2 * term;
+		saved = B1 * term;
+
+		N3 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B3);
+		N1 = saved + A1 * term;
+		saved = B3 * term;
+
+		term = N2 / (A2 + B2);
+		N2 = saved + A2 * term;
+		saved = B2 * term;
+
+		term = N3 / (A3 + B1);
+		N3 = saved + A3 * term;
+		saved = B1 * term;
+
+		N4 = saved;
+
+		return N1 * B0_ + N2 * B1_ + N3 * B2_ + N4 * B3_;
+	};
+
+	for (int i = 0; i < patches.size(); i += 16) {
+		auto p00 = points[patches[i]]->GetPosition();
+		auto p01 = points[patches[i + 1]]->GetPosition();
+		auto p02 = points[patches[i + 2]]->GetPosition();
+		auto p03 = points[patches[i + 3]]->GetPosition();
+
+		auto p10 = points[patches[i + 4]]->GetPosition();
+		auto p11 = points[patches[i + 5]]->GetPosition();
+		auto p12 = points[patches[i + 6]]->GetPosition();
+		auto p13 = points[patches[i + 7]]->GetPosition();
+
+		auto p20 = points[patches[i + 8]]->GetPosition();
+		auto p21 = points[patches[i + 9]]->GetPosition();
+		auto p22 = points[patches[i + 10]]->GetPosition();
+		auto p23 = points[patches[i + 11]]->GetPosition();
+
+		auto p30 = points[patches[i + 12]]->GetPosition();
+		auto p31 = points[patches[i + 13]]->GetPosition();
+		auto p32 = points[patches[i + 14]]->GetPosition();
+		auto p33 = points[patches[i + 15]]->GetPosition();
+
+
+		result.push_back([=](double u, double v) {
+			glm::vec3 bu0 = decastelieu(v, p00, p01, p02, p03);
+			glm::vec3 bu1 = decastelieu(v, p10, p11, p12, p13);
+			glm::vec3 bu2 = decastelieu(v, p20, p21, p22, p23);
+			glm::vec3 bu3 = decastelieu(v, p30, p31, p32, p33);
+
+			return decastelieu(u, bu0, bu1, bu2, bu3);
+			});
+	}
+
+	return result;
+}
+
+std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetUParametrisations()
+{
+	auto result = std::vector<std::function<glm::vec3(double, double)>>();
+
+	auto decastelieu = [](float t, glm::vec3 B0_, glm::vec3 B1_, glm::vec3 B2_, glm::vec3 B3_) {
+		float T0 = -1.0f;
+		float T1 = 0.0f;
+		float T2 = 1.0f;
+		float T3 = 2.0f;
+		float T4 = 3.0f;
+		float Tm1 = -2.0f;
+
+		float A1 = T2 - t;
+		float A2 = T3 - t;
+		float A3 = T4 - t;
+		float B1 = t - T1;
+		float B2 = t - T0;
+		float B3 = t - Tm1;
+
+		float N1 = 1;
+		float N2 = 0;
+		float N3 = 0;
+		float N4 = 0;
+
+		float saved = 0.0f;
+		float term = 0.0f;
+
+		term = N1 / (A1 + B1);
+		N1 = saved + A1 * term;
+		saved = B1 * term;
+
+		N2 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B2);
+		N1 = saved + A1 * term;
+		saved = B2 * term;
+
+		term = N2 / (A2 + B1);
+		N2 = saved + A2 * term;
+		saved = B1 * term;
+
+		N3 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B3);
+		N1 = saved + A1 * term;
+		saved = B3 * term;
+
+		term = N2 / (A2 + B2);
+		N2 = saved + A2 * term;
+		saved = B2 * term;
+
+		term = N3 / (A3 + B1);
+		N3 = saved + A3 * term;
+		saved = B1 * term;
+
+		N4 = saved;
+
+		return N1 * B0_ + N2 * B1_ + N3 * B2_ + N4 * B3_;
+	};
+
+	auto pochodna = [](float t, glm::vec3 B0_, glm::vec3 B1_, glm::vec3 B2_, glm::vec3 B3_) {
+		float T0 = -1.0f;
+		float T1 = 0.0f;
+		float T2 = 1.0f;
+		float T3 = 2.0f;
+		float T4 = 3.0f;
+		float Tm1 = -2.0f;
+
+		float A1 = T2 - t;
+		float A2 = T3 - t;
+		float A3 = T4 - t;
+		float B1 = t - T1;
+		float B2 = t - T0;
+		float B3 = t - Tm1;
+
+		float N1 = 1;
+		float N2 = 0;
+		float N3 = 0;
+		float N4 = 0;
+
+		float saved = 0.0f;
+		float term = 0.0f;
+
+		term = N1 / (A1 + B1);
+		N1 = saved + A1 * term;
+		saved = B1 * term;
+
+		N2 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B2);
+		N1 = saved + A1 * term;
+		saved = B2 * term;
+
+		term = N2 / (A2 + B1);
+		N2 = saved + A2 * term;
+		saved = B1 * term;
+
+		N3 = saved;
+
+		glm::vec3 f1 = 3.0f * ((B1_ - B0_) / (T2 - Tm1));
+		glm::vec3 f2 = 3.0f * ((B2_ - B1_) / (T3 - T0));
+		glm::vec3 f3 = 3.0f * ((B3_ - B2_) / (T4 - T1));
+
+		return N1 * f1 + N2 * f2 + N3 * f3;
+	};
+
+	for (int i = 0; i < patches.size(); i += 16) {
+		auto p00 = points[patches[i]]->GetPosition();
+		auto p01 = points[patches[i + 1]]->GetPosition();
+		auto p02 = points[patches[i + 2]]->GetPosition();
+		auto p03 = points[patches[i + 3]]->GetPosition();
+
+		auto p10 = points[patches[i + 4]]->GetPosition();
+		auto p11 = points[patches[i + 5]]->GetPosition();
+		auto p12 = points[patches[i + 6]]->GetPosition();
+		auto p13 = points[patches[i + 7]]->GetPosition();
+
+		auto p20 = points[patches[i + 8]]->GetPosition();
+		auto p21 = points[patches[i + 9]]->GetPosition();
+		auto p22 = points[patches[i + 10]]->GetPosition();
+		auto p23 = points[patches[i + 11]]->GetPosition();
+
+		auto p30 = points[patches[i + 12]]->GetPosition();
+		auto p31 = points[patches[i + 13]]->GetPosition();
+		auto p32 = points[patches[i + 14]]->GetPosition();
+		auto p33 = points[patches[i + 15]]->GetPosition();
+
+
+		result.push_back([=](double u, double v) {
+			glm::vec3 bu0 = decastelieu(v, p00, p01, p02, p03);
+			glm::vec3 bu1 = decastelieu(v, p10, p11, p12, p13);
+			glm::vec3 bu2 = decastelieu(v, p20, p21, p22, p23);
+			glm::vec3 bu3 = decastelieu(v, p30, p31, p32, p33);
+
+			return pochodna(u, bu0, bu1, bu2, bu3);
+			});
+	}
+
+	return result;
+}
+
+std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetVParametrisations()
+{
+	auto result = std::vector<std::function<glm::vec3(double, double)>>();
+
+	auto decastelieu = [](float t, glm::vec3 B0_, glm::vec3 B1_, glm::vec3 B2_, glm::vec3 B3_) {
+		float T0 = -1.0f;
+		float T1 = 0.0f;
+		float T2 = 1.0f;
+		float T3 = 2.0f;
+		float T4 = 3.0f;
+		float Tm1 = -2.0f;
+
+		float A1 = T2 - t;
+		float A2 = T3 - t;
+		float A3 = T4 - t;
+		float B1 = t - T1;
+		float B2 = t - T0;
+		float B3 = t - Tm1;
+
+		float N1 = 1;
+		float N2 = 0;
+		float N3 = 0;
+		float N4 = 0;
+
+		float saved = 0.0f;
+		float term = 0.0f;
+
+		term = N1 / (A1 + B1);
+		N1 = saved + A1 * term;
+		saved = B1 * term;
+
+		N2 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B2);
+		N1 = saved + A1 * term;
+		saved = B2 * term;
+
+		term = N2 / (A2 + B1);
+		N2 = saved + A2 * term;
+		saved = B1 * term;
+
+		N3 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B3);
+		N1 = saved + A1 * term;
+		saved = B3 * term;
+
+		term = N2 / (A2 + B2);
+		N2 = saved + A2 * term;
+		saved = B2 * term;
+
+		term = N3 / (A3 + B1);
+		N3 = saved + A3 * term;
+		saved = B1 * term;
+
+		N4 = saved;
+
+		return N1 * B0_ + N2 * B1_ + N3 * B2_ + N4 * B3_;
+	};
+
+	auto pochodna = [](float t, glm::vec3 B0_, glm::vec3 B1_, glm::vec3 B2_, glm::vec3 B3_) {
+		float T0 = -1.0f;
+		float T1 = 0.0f;
+		float T2 = 1.0f;
+		float T3 = 2.0f;
+		float T4 = 3.0f;
+		float Tm1 = -2.0f;
+
+		float A1 = T2 - t;
+		float A2 = T3 - t;
+		float A3 = T4 - t;
+		float B1 = t - T1;
+		float B2 = t - T0;
+		float B3 = t - Tm1;
+
+		float N1 = 1;
+		float N2 = 0;
+		float N3 = 0;
+		float N4 = 0;
+
+		float saved = 0.0f;
+		float term = 0.0f;
+
+		term = N1 / (A1 + B1);
+		N1 = saved + A1 * term;
+		saved = B1 * term;
+
+		N2 = saved;
+		saved = 0.0f;
+
+		term = N1 / (A1 + B2);
+		N1 = saved + A1 * term;
+		saved = B2 * term;
+
+		term = N2 / (A2 + B1);
+		N2 = saved + A2 * term;
+		saved = B1 * term;
+
+		N3 = saved;
+
+		glm::vec3 f1 = 3.0f * ((B1_ - B0_) / (T2 - Tm1));
+		glm::vec3 f2 = 3.0f * ((B2_ - B1_) / (T3 - T0));
+		glm::vec3 f3 = 3.0f * ((B3_ - B2_) / (T4 - T1));
+
+		return N1 * f1 + N2 * f2 + N3 * f3;
+	};
+
+	for (int i = 0; i < patches.size(); i += 16) {
+		auto p00 = points[patches[i]]->GetPosition();
+		auto p01 = points[patches[i + 1]]->GetPosition();
+		auto p02 = points[patches[i + 2]]->GetPosition();
+		auto p03 = points[patches[i + 3]]->GetPosition();
+
+		auto p10 = points[patches[i + 4]]->GetPosition();
+		auto p11 = points[patches[i + 5]]->GetPosition();
+		auto p12 = points[patches[i + 6]]->GetPosition();
+		auto p13 = points[patches[i + 7]]->GetPosition();
+
+		auto p20 = points[patches[i + 8]]->GetPosition();
+		auto p21 = points[patches[i + 9]]->GetPosition();
+		auto p22 = points[patches[i + 10]]->GetPosition();
+		auto p23 = points[patches[i + 11]]->GetPosition();
+
+		auto p30 = points[patches[i + 12]]->GetPosition();
+		auto p31 = points[patches[i + 13]]->GetPosition();
+		auto p32 = points[patches[i + 14]]->GetPosition();
+		auto p33 = points[patches[i + 15]]->GetPosition();
+
+
+		result.push_back([=](double u, double v) {
+			glm::vec3 bu0 = decastelieu(u, p00, p10, p20, p30);
+			glm::vec3 bu1 = decastelieu(u, p01, p11, p21, p31);
+			glm::vec3 bu2 = decastelieu(u, p02, p12, p22, p32);
+			glm::vec3 bu3 = decastelieu(u, p03, p13, p23, p33);
+
+			return pochodna(v, bu0, bu1, bu2, bu3);
+			});
+	}
+
+	return result;
+}
+
+
 void BezierFlakeC2::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object> new_point)
 {
 	for (int i = 0; i < points.size(); i++) {

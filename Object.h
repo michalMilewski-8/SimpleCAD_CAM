@@ -13,6 +13,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include<functional>
 
 #include "Shader.h"
 #include "Camera.h"
@@ -43,7 +44,9 @@ public:
 	virtual void Update() {};
 	virtual std::vector<std::shared_ptr<Object>> GetVirtualObjects() { return std::vector<std::shared_ptr<Object>>(); };
 	virtual void Serialize(xml_document<>& document, xml_node<>* scene) {};
-
+	virtual std::vector<std::function<glm::vec3(double, double)>> GetParametrisations() { return {}; };
+	virtual std::vector<std::function<glm::vec3(double, double)>> GetUParametrisations() { return {}; };
+	virtual std::vector<std::function<glm::vec3(double, double)>> GetVParametrisations() { return {}; };
 	virtual void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) {};
 
 	static glm::quat RotationBetweenVectors(glm::vec3 start, glm::vec3 dest);

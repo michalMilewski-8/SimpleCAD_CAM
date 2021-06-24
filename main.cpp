@@ -55,6 +55,7 @@ float ipd = 0.01f;
 float d = 1.0f;
 float near = 0.001f;
 float far = 200.0f;
+bool serch_for_intersections_using_cursor = false;
 Camera cam;
 Shader ourShader;
 std::unique_ptr<Cursor> cursor, center;
@@ -71,6 +72,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 void transform_screen_coordinates_to_world(glm::vec3& world_coordinates_end, glm::vec3& world_coordinates_start, float x_pos, float y_pos);
 void add_selected_points_to_selected_curve();
 void create_gui();
+glm::vec4 look_for_intersection(std::vector<std::shared_ptr<Object>> obj);
 
 int main() {
 	glfwInit();
@@ -651,7 +653,6 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 		}
 		objects.push_back(sh);
 	}
-
 	ImGui::SameLine();
 	if (ImGui::Button("BezierInterpol")) {
 		auto sh = std::make_shared<BezierInterpol>(ourShader);
@@ -667,7 +668,6 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 		}
 		objects.push_back(sh);
 	}
-
 	if (ImGui::CollapsingHeader("BezierFlakeC0")) {
 		static int planar = 0;
 		ImGui::RadioButton("plain", &planar, 0);
@@ -686,7 +686,6 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 
 		}
 	}
-
 	if (ImGui::CollapsingHeader("BezierFlakeC2")) {
 		static int planar = 0;
 		ImGui::RadioButton("plain", &planar, 0);
@@ -705,7 +704,249 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 
 		}
 	}
+	if (ImGui::CollapsingHeader("Intersection adding")) {
+		ImGui::Checkbox("Use cursor to point intersection", &serch_for_intersections_using_cursor);
+		if (ImGui::Button("Intersection")) {
+			auto selected_objects = std::vector<std::shared_ptr<Object>>();
+			for (auto& obj : objects_list) {
+				if (dynamic_cast<BezierFlakeC0*>(obj.get()) || dynamic_cast<Torus*>(obj.get())) {
+					if (obj->selected) {
+						selected_objects.push_back(obj);
+					}
+				}
+			}
+			if (selected_objects.size() > 2 || selected_objects.size() <= 0) return;
 
+			auto intersection = look_for_intersection(selected_objects);
+			if (intersection.x < 0) return;
+		}
+	}
+}
+
+glm::vec4 look_for_intersection(std::vector<std::shared_ptr<Object>> obj) {
+	float eps = 0.001f;
+	float eps_cursor = 0.1f;
+
+	if (obj.size() == 2) {
+		auto first = obj[0]->GetParametrisations();
+		auto second = obj[1]->GetParametrisations();
+
+		auto firstU = obj[0]->GetUParametrisations();
+		auto secondU = obj[1]->GetUParametrisations();
+
+		auto firstV = obj[0]->GetVParametrisations();
+		auto secondV = obj[1]->GetVParametrisations();
+
+		for (int i = 0; i < first.size(); i++) {
+			for (int j = 0; j < second.size(); j++) {
+				int l = 0;
+				
+				auto x = glm::vec4(0.5, 0.5, 0.5, 0.5);
+				auto xstart = glm::vec4(0, 0, 0, 0);
+				auto xend = glm::vec4(1, 1, 1, 1);
+				auto diff = first[i](x.x, x.y) - first[j](x.z, x.w);
+				std::vector<glm::vec4> divides = {};
+				std::vector<int> randoms = {};
+
+				if (serch_for_intersections_using_cursor) {
+					xstart = glm::vec4(1, 1, 0, 0);
+					xend = glm::vec4(0, 0, 1, 1);
+					constexpr int num_off_divisions = 20;
+					constexpr float stride = 1.0f / (num_off_divisions - 1);
+					float u = 0, v = 0;
+					auto cursor_pos = cursor->GetPosition();
+					for (int s = 0; s < num_off_divisions; s++) {
+						for (int f = 0; f < num_off_divisions; f++) {
+							if (glm::length(cursor_pos - first[i](u, v)) < eps_cursor) {
+								xstart.x = min(u, xstart.x);
+								xstart.y = min(v, xstart.y);
+								xend.x = max(u, xend.x);
+								xend.y = max(v, xend.y);
+							}
+							v += stride;
+						}
+						u += stride;
+						v = 0;
+					}
+				}
+
+				while((std::abs(diff.x)>eps || std::abs(diff.y) > eps|| std::abs(diff.z) > eps) && l <= 15){
+					l++;
+					divides.clear();
+					randoms.clear();
+					divides.push_back(xstart);
+					
+					for (int n = 0; n < 32; n++) {
+						randoms.push_back(rand() % 1000);
+					}
+
+					std::sort(randoms.begin(), randoms.end());
+					auto len = xend - xstart;
+
+					for (int n = 0; n < 8; n++) {
+						divides.push_back({
+							(randoms[4*n] / 1000.f) * len.x + xstart.x,
+							(randoms[4*n+1] / 1000.f) * len.y + xstart.y,
+							(randoms[4*n+2] / 1000.f) * len.z + xstart.z,
+							(randoms[4*n+3] / 1000.f) * len.w + xstart.w });
+					}
+
+					divides.push_back(xend);
+
+					float min_len = 100000.0f;
+					int min_first_u = 0;
+					int min_first_v = 0;
+					int min_second_u = 0;
+					int min_second_v = 0;
+
+					for (int g = 0; g < divides.size(); g++) {
+						for (int z = 0; z < divides.size(); z++) {
+							for (int h = 0; h < divides.size(); h++) {
+								for (int r = 0; r < divides.size(); r++) {
+									diff = first[i](divides[g].x, divides[z].y) - second[j](divides[h].z, divides[r].w);
+									if (glm::length(diff) < min_len) {
+										min_len = glm::length(diff);
+										min_first_u = g;
+										min_first_v = z;
+										min_second_u = h;
+										min_second_v = r;
+									}
+								}
+							}
+						}
+					}
+
+					x = { divides[min_first_u].x,divides[min_first_v].y,divides[min_second_u].z,divides[min_second_v].w };
+					xstart = { 
+						divides[std::max(min_first_u-1,0)].x,
+						divides[std::max(min_first_v - 1,0)].y,
+						divides[std::max(min_second_u - 1,0)].z,
+						divides[std::max(min_second_v - 1,0)].w };
+					xend = {
+						divides[std::min(min_first_u + 1, (int)(divides.size())-1)].x,
+						divides[std::min(min_first_v + 1, (int)(divides.size())-1)].y,
+						divides[std::min(min_second_u + 1,(int)(divides.size())-1)].z,
+						divides[std::min(min_second_v + 1,(int)(divides.size())-1)].w };
+				}
+
+				diff = first[i](x.x, x.y) - second[j](x.z, x.w);
+				if (glm::length(diff) < eps) 
+				{
+					objects_list.push_back(std::make_shared<Point>(first[i](x.x, x.y), glm::vec4(0, 0, 1, 1), ourShader));
+					objects_list.push_back(std::make_shared<Point>(second[j](x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
+
+					return x;
+				}
+			}
+		}
+		return glm::vec4(-1, 0, 0, 0);
+	}
+	else { //size() == 1
+		auto first = obj[0]->GetParametrisations();
+		for (int i = 0; i < first.size(); i++) {
+			for (int j = i+1; j < first.size(); j++) {
+				int l = 0;
+				float eps = 0.001f;
+				auto x = glm::vec4(0.5, 0.5, 0.5, 0.5);
+				auto xstart = glm::vec4(0, 0, 0, 0);
+				auto xend = glm::vec4(1, 1, 1, 1);
+				auto diff = first[i](x.x, x.y) - first[j](x.z, x.w);
+				std::vector<glm::vec4> divides = {};
+				std::vector<int> randoms = {};
+
+				if (serch_for_intersections_using_cursor) {
+					xstart = glm::vec4(1, 1, 0, 0);
+					xend = glm::vec4(0, 0, 1, 1);
+					constexpr int num_off_divisions = 20;
+					constexpr float stride = 1.0f / (num_off_divisions - 1);
+					float u = 0, v = 0;
+					auto cursor_pos = cursor->GetPosition();
+					for (int s = 0; s < num_off_divisions; s++) {
+						for (int f = 0; f < num_off_divisions; f++) {
+							if (glm::length(cursor_pos - first[i](u, v)) < eps_cursor) {
+								xstart.x = min(u, xstart.x);
+								xstart.y = min(v, xstart.y);
+								xend.x = max(u, xend.x);
+								xend.y = max(v, xend.y);
+							}
+							v += stride;
+						}
+						u += stride;
+						v = 0;
+					}
+				}
+
+				while ((std::abs(diff.x) > eps || std::abs(diff.y) > eps || std::abs(diff.z) > eps) && l <= 15) {
+					l++;
+					divides.clear();
+					randoms.clear();
+					divides.push_back(xstart);
+
+					for (int n = 0; n < 32; n++) {
+						randoms.push_back(rand() % 1000);
+					}
+
+					std::sort(randoms.begin(), randoms.end());
+					auto len = xend - xstart;
+					if (len.x < 0 || len.y < 0 || len.z < 0 || len.w < 0) break;
+					for (int n = 0; n < 8; n++) {
+						divides.push_back({
+							(randoms[4 * n] / 1000.f) * len.x + xstart.x,
+							(randoms[4 * n + 1] / 1000.f) * len.y + xstart.y,
+							(randoms[4 * n + 2] / 1000.f) * len.z + xstart.z,
+							(randoms[4 * n + 3] / 1000.f) * len.w + xstart.w });
+					}
+
+					divides.push_back(xend);
+
+					float min_len = 100000.0f;
+					int min_first_u = 0;
+					int min_first_v = 0;
+					int min_second_u = 0;
+					int min_second_v = 0;
+
+					for (int g = 0; g < divides.size(); g++) {
+						for (int z = 0; z < divides.size(); z++) {
+							for (int h = 0; h < divides.size(); h++) {
+								for (int r = 0; r < divides.size(); r++) {
+									diff = first[i](divides[g].x, divides[z].y) - first[j](divides[h].z, divides[r].w);
+									if (glm::length(diff) < min_len ) {
+										min_len = glm::length(diff);
+										min_first_u = g;
+										min_first_v = z;
+										min_second_u = h;
+										min_second_v = r;
+									}
+								}
+							}
+						}
+					}
+
+					x = { divides[min_first_u].x,divides[min_first_v].y,divides[min_second_u].z,divides[min_second_v].w };
+					xstart = {
+						divides[std::max(min_first_u - 1,0)].x,
+						divides[std::max(min_first_v - 1,0)].y,
+						divides[std::max(min_second_u - 1,0)].z,
+						divides[std::max(min_second_v - 1,0)].w };
+					xend = {
+						divides[std::min(min_first_u + 1, (int)(divides.size()) - 1)].x,
+						divides[std::min(min_first_v + 1, (int)(divides.size()) - 1)].y,
+						divides[std::min(min_second_u + 1,(int)(divides.size()) - 1)].z,
+						divides[std::min(min_second_v + 1,(int)(divides.size()) - 1)].w };
+				}
+
+				diff = first[i](x.x, x.y) - first[j](x.z, x.w);
+				if (glm::length(diff) < eps)
+				{
+					objects_list.push_back(std::make_shared<Point>(first[i](x.x, x.y), glm::vec4(0, 0, 1, 1), ourShader));
+					objects_list.push_back(std::make_shared<Point>(first[j](x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
+
+					return x;
+				}
+			}
+		}
+		return glm::vec4(-1, 0, 0, 0);
+	}
 }
 
 void add_selected_points_to_selected_curve() {

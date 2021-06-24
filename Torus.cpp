@@ -125,6 +125,45 @@ void Torus::Serialize(xml_document<>& document, xml_node<>* scene)
 	scene->append_node(figure);
 }
 
+std::vector<std::function<glm::vec3(double, double)>> Torus::GetParametrisations()
+{
+	auto result = std::vector<std::function<glm::vec3(double, double)>>();
+	result.push_back([=](double u, double v) {
+		glm::vec3 res = { 
+			glm::cos(glm::radians(360.0f * v)) * R - glm::sin(glm::radians(360.0f * u)) * glm::cos(glm::radians(360.0f * v)) * r,
+			glm::cos(glm::radians(360.0f * u)) * r,
+			glm::sin(glm::radians(360.0f * v)) * R - glm::sin(glm::radians(360.0f * u)) * glm::sin(glm::radians(360.0f * v)) * r };
+		return res;
+		});
+	return result;
+}
+
+std::vector<std::function<glm::vec3(double, double)>> Torus::GetUParametrisations()
+{
+	auto result = std::vector<std::function<glm::vec3(double, double)>>();
+	result.push_back([=](double u, double v) {
+		glm::vec3 res = {
+			- glm::cos(glm::radians(360.0f * u)) * glm::cos(glm::radians(360.0f * v)) * r,
+			- glm::sin(glm::radians(360.0f * u)) * r,
+			- glm::cos(glm::radians(360.0f * u)) * glm::sin(glm::radians(360.0f * v)) * r };
+		return res;
+		});
+	return result;
+}
+
+std::vector<std::function<glm::vec3(double, double)>> Torus::GetVParametrisations()
+{
+	auto result = std::vector<std::function<glm::vec3(double, double)>>();
+	result.push_back([=](double u, double v) {
+		glm::vec3 res = {
+			- glm::sin(glm::radians(360.0f * v)) * R + glm::sin(glm::radians(360.0f * u)) * glm::sin(glm::radians(360.0f * v)) * r,
+			0,
+			glm::cos(glm::radians(360.0f * v)) * R - glm::sin(glm::radians(360.0f * u)) * glm::cos(glm::radians(360.0f * v)) * r };
+		return res;
+		});
+	return result;
+}
+
 void Torus::SetR(float _R)
 {
 	R = _R;

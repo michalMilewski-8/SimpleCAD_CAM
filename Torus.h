@@ -19,6 +19,9 @@ public:
     glm::vec4 GetColor() const { return color; }
 
     void Serialize(xml_document<>& document, xml_node<>* scene)  override;
+    std::vector<std::function<glm::vec3(double, double)>> GetParametrisations() override;
+    std::vector<std::function<glm::vec3(double, double)>> GetUParametrisations() override;
+    std::vector<std::function<glm::vec3(double, double)>> GetVParametrisations() override;
 
     void SetR(float _R);
     void Setr(float _r);
