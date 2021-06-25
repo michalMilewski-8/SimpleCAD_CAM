@@ -1,5 +1,6 @@
 #include "Torus.h"
-
+#define _USE_MATH_DEFINES
+#include <math.h>
 unsigned int Torus::counter = 1;
 
 Torus::Torus(float R, float r, int vertical, int horizontal, glm::vec4 color, Shader sh) :
@@ -130,9 +131,9 @@ std::vector<std::function<glm::vec3(double, double)>> Torus::GetParametrisations
 	auto result = std::vector<std::function<glm::vec3(double, double)>>();
 	result.push_back([=](double u, double v) {
 		glm::vec3 res = { 
-			glm::cos(glm::radians(360.0f * v)) * R - glm::sin(glm::radians(360.0f * u)) * glm::cos(glm::radians(360.0f * v)) * r,
-			glm::cos(glm::radians(360.0f * u)) * r,
-			glm::sin(glm::radians(360.0f * v)) * R - glm::sin(glm::radians(360.0f * u)) * glm::sin(glm::radians(360.0f * v)) * r };
+			glm::cos(2 * M_PI * v) * R - glm::sin(2 * M_PI * u) * glm::cos(2 * M_PI * v) * r,
+			glm::cos(2 * M_PI * u) * r,
+			glm::sin(2 * M_PI * v) * R - glm::sin(2 * M_PI * u) * glm::sin(2 * M_PI * v) * r };
 		return res;
 		});
 	return result;
@@ -143,9 +144,9 @@ std::vector<std::function<glm::vec3(double, double)>> Torus::GetUParametrisation
 	auto result = std::vector<std::function<glm::vec3(double, double)>>();
 	result.push_back([=](double u, double v) {
 		glm::vec3 res = {
-			- glm::cos(glm::radians(360.0f * u)) * glm::cos(glm::radians(360.0f * v)) * r,
-			- glm::sin(glm::radians(360.0f * u)) * r,
-			- glm::cos(glm::radians(360.0f * u)) * glm::sin(glm::radians(360.0f * v)) * r };
+			-2 * M_PI * glm::cos(2 * M_PI * u) * glm::cos(2 * M_PI * v) * r,
+			-2 * M_PI * glm::sin(2 * M_PI * u) * r,
+			-2 * M_PI * glm::cos(2 * M_PI * u) * glm::sin(2 * M_PI * v) * r };
 		return res;
 		});
 	return result;
@@ -156,9 +157,9 @@ std::vector<std::function<glm::vec3(double, double)>> Torus::GetVParametrisation
 	auto result = std::vector<std::function<glm::vec3(double, double)>>();
 	result.push_back([=](double u, double v) {
 		glm::vec3 res = {
-			- glm::sin(glm::radians(360.0f * v)) * R + glm::sin(glm::radians(360.0f * u)) * glm::sin(glm::radians(360.0f * v)) * r,
+			-2 * M_PI * glm::sin(2 * M_PI * v) * R + 2 * M_PI * glm::sin(2 * M_PI * u) * glm::sin(2 * M_PI * v) * r,
 			0,
-			glm::cos(glm::radians(360.0f * v)) * R - glm::sin(glm::radians(360.0f * u)) * glm::cos(glm::radians(360.0f * v)) * r };
+			2 * M_PI* glm::cos(2 * M_PI * v) * R - 2 * M_PI * glm::sin(2 * M_PI * u) * glm::cos(2 * M_PI * v) * r };
 		return res;
 		});
 	return result;
