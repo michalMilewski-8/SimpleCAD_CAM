@@ -179,11 +179,21 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetParametr
 		return B0_d_ * one_minus_t + B1_d_ * t;
 	};
 
-	for (int i = 0; i < patches.size(); i += 16) {
+	result.push_back([=](double u, double v) {
+
+		int unum = std::max(std::min((int)(u * num_of_flakes.x), (int)num_of_flakes.x - 1), 0);
+		int vnum = std::max(std::min((int)(v * num_of_flakes.y), (int)num_of_flakes.y - 1), 0);
+
+		double u_ = u * num_of_flakes.x - unum;
+		double v_ = v * num_of_flakes.y - vnum;
+
+
+		int i = 16 * ((num_of_flakes.y * unum) + vnum);
+
 		auto p00 = points[patches[i]]->GetPosition();
-		auto p01 = points[patches[i+1]]->GetPosition();
-		auto p02 = points[patches[i+2]]->GetPosition();
-		auto p03 = points[patches[i+3]]->GetPosition();
+		auto p01 = points[patches[i + 1]]->GetPosition();
+		auto p02 = points[patches[i + 2]]->GetPosition();
+		auto p03 = points[patches[i + 3]]->GetPosition();
 
 		auto p10 = points[patches[i + 4]]->GetPosition();
 		auto p11 = points[patches[i + 5]]->GetPosition();
@@ -200,16 +210,13 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetParametr
 		auto p32 = points[patches[i + 14]]->GetPosition();
 		auto p33 = points[patches[i + 15]]->GetPosition();
 
+		glm::vec3 bu0 = decastelieu(v_, p00, p01, p02, p03);
+		glm::vec3 bu1 = decastelieu(v_, p10, p11, p12, p13);
+		glm::vec3 bu2 = decastelieu(v_, p20, p21, p22, p23);
+		glm::vec3 bu3 = decastelieu(v_, p30, p31, p32, p33);
 
-		result.push_back([=](double u, double v) {
-			glm::vec3 bu0 = decastelieu(v, p00, p01, p02, p03);
-			glm::vec3 bu1 = decastelieu(v, p10, p11, p12, p13);
-			glm::vec3 bu2 = decastelieu(v, p20, p21, p22, p23);
-			glm::vec3 bu3 = decastelieu(v, p30, p31, p32, p33);
-
-			return decastelieu(u, bu0, bu1, bu2, bu3);
-			});
-	}
+		return decastelieu(u_, bu0, bu1, bu2, bu3);
+		});
 
 	return result;
 }
@@ -249,7 +256,17 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetUParamet
 		return B0_d_ * one_minus_t + B1_d_ * t;
 	};
 
-	for (int i = 0; i < patches.size(); i += 16) {
+	result.push_back([=](double u, double v) {
+
+		int unum = std::max(std::min((int)(u * num_of_flakes.x), (int)num_of_flakes.x - 1), 0);
+		int vnum = std::max(std::min((int)(v * num_of_flakes.y), (int)num_of_flakes.y - 1), 0);
+
+		double u_ = u * num_of_flakes.x - unum;
+		double v_ = v * num_of_flakes.y - vnum;
+
+
+		int i = 16 * ((num_of_flakes.y * unum) + vnum);
+
 		auto p00 = points[patches[i]]->GetPosition();
 		auto p01 = points[patches[i + 1]]->GetPosition();
 		auto p02 = points[patches[i + 2]]->GetPosition();
@@ -270,16 +287,13 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetUParamet
 		auto p32 = points[patches[i + 14]]->GetPosition();
 		auto p33 = points[patches[i + 15]]->GetPosition();
 
+		glm::vec3 bu0 = decastelieu(v_, p00, p01, p02, p03);
+		glm::vec3 bu1 = decastelieu(v_, p10, p11, p12, p13);
+		glm::vec3 bu2 = decastelieu(v_, p20, p21, p22, p23);
+		glm::vec3 bu3 = decastelieu(v_, p30, p31, p32, p33);
 
-		result.push_back([=](double u, double v) {
-			glm::vec3 bu0 = decastelieu(v, p00, p01, p02, p03);
-			glm::vec3 bu1 = decastelieu(v, p10, p11, p12, p13);
-			glm::vec3 bu2 = decastelieu(v, p20, p21, p22, p23);
-			glm::vec3 bu3 = decastelieu(v, p30, p31, p32, p33);
-
-			return pochodna(u, bu0, bu1, bu2, bu3);
-			});
-	}
+		return (float)num_of_flakes.x* pochodna(u_, bu0, bu1, bu2, bu3);
+		});
 
 	return result;
 }
@@ -303,7 +317,6 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetVParamet
 		return B0_d_ * one_minus_t + B1_d_ * t;
 	};
 
-
 	auto pochodna = [](float t, glm::vec3 B0, glm::vec3 B1, glm::vec3 B2, glm::vec3 B3) {
 		float one_minus_t = 1.0 - t;
 
@@ -320,7 +333,16 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetVParamet
 		return B0_d_ * one_minus_t + B1_d_ * t;
 	};
 
-	for (int i = 0; i < patches.size(); i += 16) {
+	result.push_back([=](double u, double v) {
+
+		int unum = std::max(std::min((int)(u * num_of_flakes.x), (int)num_of_flakes.x - 1), 0);
+		int vnum = std::max(std::min((int)(v * num_of_flakes.y), (int)num_of_flakes.y - 1), 0);
+
+		double u_ = u * num_of_flakes.x - unum;
+		double v_ = v * num_of_flakes.y - vnum;
+
+		int i = 16 * ((num_of_flakes.y * unum) + vnum);
+
 		auto p00 = points[patches[i]]->GetPosition();
 		auto p01 = points[patches[i + 1]]->GetPosition();
 		auto p02 = points[patches[i + 2]]->GetPosition();
@@ -341,16 +363,13 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetVParamet
 		auto p32 = points[patches[i + 14]]->GetPosition();
 		auto p33 = points[patches[i + 15]]->GetPosition();
 
+		glm::vec3 bu0 = decastelieu(u_, p00, p10, p20, p30);
+		glm::vec3 bu1 = decastelieu(u_, p01, p11, p21, p31);
+		glm::vec3 bu2 = decastelieu(u_, p02, p12, p22, p32);
+		glm::vec3 bu3 = decastelieu(u_, p03, p13, p23, p33);
 
-		result.push_back([=](double u, double v) {
-			glm::vec3 bu0 = decastelieu(u, p00, p10, p20, p30);
-			glm::vec3 bu1 = decastelieu(u, p01, p11, p21, p31);
-			glm::vec3 bu2 = decastelieu(u, p02, p12, p22, p32);
-			glm::vec3 bu3 = decastelieu(u, p03, p13, p23, p33);
-
-			return pochodna(v, bu0, bu1, bu2, bu3);
-			});
-	}
+		return (float)num_of_flakes.y * pochodna(v_, bu0, bu1, bu2, bu3);
+		});
 
 	return result;
 }

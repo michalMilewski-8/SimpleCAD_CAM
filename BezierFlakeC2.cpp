@@ -1,6 +1,7 @@
 #include "BezierFlakeC2.h"
+#include <math.h>
 
-BezierFlakeC2::BezierFlakeC2(Shader sh, int type, glm::uvec2 flakes_count, glm::vec2 sizes):
+BezierFlakeC2::BezierFlakeC2(Shader sh, int type, glm::uvec2 flakes_count, glm::vec2 sizes) :
 	BezierFlakeC0(sh)
 {
 	create_vertices(type, flakes_count, sizes);
@@ -122,7 +123,16 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetParametr
 		return N1 * B0_ + N2 * B1_ + N3 * B2_ + N4 * B3_;
 	};
 
-	for (int i = 0; i < patches.size(); i += 16) {
+	result.push_back([&](double u, double v) {
+		
+		int unum = std::max(std::min((int)(u * num_of_flakes.x), (int)num_of_flakes.x - 1), 0);
+		int vnum = std::max(std::min((int)(v * num_of_flakes.y), (int)num_of_flakes.y - 1), 0);
+
+		double u_ = u * num_of_flakes.x - unum;
+		double v_ = v * num_of_flakes.y - vnum;
+
+		int i = 16*((num_of_flakes.y * unum) + vnum);
+
 		auto p00 = points[patches[i]]->GetPosition();
 		auto p01 = points[patches[i + 1]]->GetPosition();
 		auto p02 = points[patches[i + 2]]->GetPosition();
@@ -143,16 +153,13 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetParametr
 		auto p32 = points[patches[i + 14]]->GetPosition();
 		auto p33 = points[patches[i + 15]]->GetPosition();
 
+		glm::vec3 bu0 = decastelieu(v_, p00, p01, p02, p03);
+		glm::vec3 bu1 = decastelieu(v_, p10, p11, p12, p13);
+		glm::vec3 bu2 = decastelieu(v_, p20, p21, p22, p23);
+		glm::vec3 bu3 = decastelieu(v_, p30, p31, p32, p33);
 
-		result.push_back([=](double u, double v) {
-			glm::vec3 bu0 = decastelieu(v, p00, p01, p02, p03);
-			glm::vec3 bu1 = decastelieu(v, p10, p11, p12, p13);
-			glm::vec3 bu2 = decastelieu(v, p20, p21, p22, p23);
-			glm::vec3 bu3 = decastelieu(v, p30, p31, p32, p33);
-
-			return decastelieu(u, bu0, bu1, bu2, bu3);
-			});
-	}
+		return decastelieu(u_, bu0, bu1, bu2, bu3);
+		});
 
 	return result;
 }
@@ -266,7 +273,15 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetUParamet
 		return N1 * f1 + N2 * f2 + N3 * f3;
 	};
 
-	for (int i = 0; i < patches.size(); i += 16) {
+	result.push_back([&](double u, double v) {
+		int unum = std::max(std::min((int)(u * num_of_flakes.x), (int)num_of_flakes.x - 1), 0);
+		int vnum = std::max(std::min((int)(v * num_of_flakes.y), (int)num_of_flakes.y - 1), 0);
+
+		double u_ = u * num_of_flakes.x - unum;
+		double v_ = v * num_of_flakes.y - vnum;
+
+		int i = 16 * ((num_of_flakes.y * unum) + vnum);
+
 		auto p00 = points[patches[i]]->GetPosition();
 		auto p01 = points[patches[i + 1]]->GetPosition();
 		auto p02 = points[patches[i + 2]]->GetPosition();
@@ -287,16 +302,13 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetUParamet
 		auto p32 = points[patches[i + 14]]->GetPosition();
 		auto p33 = points[patches[i + 15]]->GetPosition();
 
+		glm::vec3 bu0 = decastelieu(v_, p00, p01, p02, p03);
+		glm::vec3 bu1 = decastelieu(v_, p10, p11, p12, p13);
+		glm::vec3 bu2 = decastelieu(v_, p20, p21, p22, p23);
+		glm::vec3 bu3 = decastelieu(v_, p30, p31, p32, p33);
 
-		result.push_back([=](double u, double v) {
-			glm::vec3 bu0 = decastelieu(v, p00, p01, p02, p03);
-			glm::vec3 bu1 = decastelieu(v, p10, p11, p12, p13);
-			glm::vec3 bu2 = decastelieu(v, p20, p21, p22, p23);
-			glm::vec3 bu3 = decastelieu(v, p30, p31, p32, p33);
-
-			return pochodna(u, bu0, bu1, bu2, bu3);
-			});
-	}
+		return (float)num_of_flakes.x * pochodna(u_, bu0, bu1, bu2, bu3);
+		});
 
 	return result;
 }
@@ -410,7 +422,15 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetVParamet
 		return N1 * f1 + N2 * f2 + N3 * f3;
 	};
 
-	for (int i = 0; i < patches.size(); i += 16) {
+	result.push_back([&](double u, double v) {
+
+		int unum = std::max(std::min((int)(u * num_of_flakes.x), (int)num_of_flakes.x - 1), 0);
+		int vnum = std::max(std::min((int)(v * num_of_flakes.y), (int)num_of_flakes.y - 1), 0);
+
+		double u_ = u * num_of_flakes.x - unum;
+		double v_ = v * num_of_flakes.y - vnum;
+		int i = 16 * ((num_of_flakes.y * unum) + vnum);
+
 		auto p00 = points[patches[i]]->GetPosition();
 		auto p01 = points[patches[i + 1]]->GetPosition();
 		auto p02 = points[patches[i + 2]]->GetPosition();
@@ -431,20 +451,16 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC2::GetVParamet
 		auto p32 = points[patches[i + 14]]->GetPosition();
 		auto p33 = points[patches[i + 15]]->GetPosition();
 
+		glm::vec3 bu0 = decastelieu(u_, p00, p10, p20, p30);
+		glm::vec3 bu1 = decastelieu(u_, p01, p11, p21, p31);
+		glm::vec3 bu2 = decastelieu(u_, p02, p12, p22, p32);
+		glm::vec3 bu3 = decastelieu(u_, p03, p13, p23, p33);
 
-		result.push_back([=](double u, double v) {
-			glm::vec3 bu0 = decastelieu(u, p00, p10, p20, p30);
-			glm::vec3 bu1 = decastelieu(u, p01, p11, p21, p31);
-			glm::vec3 bu2 = decastelieu(u, p02, p12, p22, p32);
-			glm::vec3 bu3 = decastelieu(u, p03, p13, p23, p33);
-
-			return pochodna(v, bu0, bu1, bu2, bu3);
-			});
-	}
+		return (float)num_of_flakes.y * pochodna(v_, bu0, bu1, bu2, bu3);
+		});
 
 	return result;
 }
-
 
 void BezierFlakeC2::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object> new_point)
 {
@@ -478,7 +494,7 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 				else {
 					polygons.back()->AddPoint(point);
 				}
-				polygons[j+1]->AddPoint(point);
+				polygons[j + 1]->AddPoint(point);
 			}
 		}
 		for (int i = 0; i < flakes_count.x; i++) {
@@ -489,21 +505,21 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 				patches.push_back((flakes_count.y + 3) * i + j + 1);
 				patches.push_back((flakes_count.y + 3) * i + j + 2);
 				patches.push_back((flakes_count.y + 3) * i + j + 3);
-													
-				patches.push_back((flakes_count.y + 3) * ( i + 1) + j + 0);
-				patches.push_back((flakes_count.y + 3) * ( i + 1) + j + 1);
-				patches.push_back((flakes_count.y + 3) * ( i + 1) + j + 2);
-				patches.push_back((flakes_count.y + 3) * ( i + 1) + j + 3);
-													
-				patches.push_back((flakes_count.y + 3) * ( i + 2) + j + 0);
-				patches.push_back((flakes_count.y + 3) * ( i + 2) + j + 1);
-				patches.push_back((flakes_count.y + 3) * ( i + 2) + j + 2);
-				patches.push_back((flakes_count.y + 3) * ( i + 2) + j + 3);
-													
-				patches.push_back((flakes_count.y + 3) * ( i + 3) + j + 0);
-				patches.push_back((flakes_count.y + 3) * ( i + 3) + j + 1);
-				patches.push_back((flakes_count.y + 3) * ( i + 3) + j + 2);
-				patches.push_back((flakes_count.y + 3) * ( i + 3) + j + 3);
+
+				patches.push_back((flakes_count.y + 3) * (i + 1) + j + 0);
+				patches.push_back((flakes_count.y + 3) * (i + 1) + j + 1);
+				patches.push_back((flakes_count.y + 3) * (i + 1) + j + 2);
+				patches.push_back((flakes_count.y + 3) * (i + 1) + j + 3);
+
+				patches.push_back((flakes_count.y + 3) * (i + 2) + j + 0);
+				patches.push_back((flakes_count.y + 3) * (i + 2) + j + 1);
+				patches.push_back((flakes_count.y + 3) * (i + 2) + j + 2);
+				patches.push_back((flakes_count.y + 3) * (i + 2) + j + 3);
+
+				patches.push_back((flakes_count.y + 3) * (i + 3) + j + 0);
+				patches.push_back((flakes_count.y + 3) * (i + 3) + j + 1);
+				patches.push_back((flakes_count.y + 3) * (i + 3) + j + 2);
+				patches.push_back((flakes_count.y + 3) * (i + 3) + j + 3);
 			}
 		}
 
@@ -512,7 +528,7 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 	case 1: { //barrel
 		float stridex = glm::two_pi<float>() / (flakes_count.x);
 		float stridez = sizes.y / (flakes_count.y + 2);
-		for (int i = 0; i < flakes_count.x ; i++) {
+		for (int i = 0; i < flakes_count.x; i++) {
 			float xpos = sizes.x * std::cos(i * stridex);
 			float ypos = sizes.x * std::sin(i * stridex);
 			polygons.push_back(std::make_shared<Line>(shader));
@@ -545,7 +561,7 @@ void BezierFlakeC2::create_vertices(int type, glm::uvec2 flakes_count, glm::vec2
 
 
 
-				if (i == flakes_count.x -1) {
+				if (i == flakes_count.x - 1) {
 					patches.push_back(j + 0);
 					patches.push_back(j + 1);
 					patches.push_back(j + 2);

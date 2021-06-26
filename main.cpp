@@ -230,8 +230,8 @@ int main() {
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 0, glm::uvec2(1, 1), glm::vec2(1, 1)));
-	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 0, glm::uvec2(1, 1), glm::vec2(1, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC2>(ourShader, 1, glm::uvec2(5, 5), glm::vec2(0.25, 1)));
+	objects_list.push_back(std::make_shared<BezierFlakeC0>(ourShader, 0, glm::uvec2(3, 3), glm::vec2(1, 1)));
 	objects_list.back()->Select();
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -930,7 +930,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 	auto q = obj.back()->GetParametrisations()[functions.y];
 	auto qu = obj.back()->GetUParametrisations()[functions.y];
 	auto qv = obj.back()->GetVParametrisations()[functions.y];
-	float eps = 0.001f;
+	float eps = 0.01f;
 
 	bool do_other_direction = false;
 	float direction = 1.0f;
@@ -946,8 +946,8 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d*0.75f)
 		{
 			P0 = f(x.x, x.y);
-			glm::vec3 nf = glm::cross(fu(x.x, x.y), fv(x.x, x.y));
-			glm::vec3 nq = glm::cross(qu(x.z, x.w), qv(x.z, x.w));
+			glm::vec3 nf = glm::normalize(glm::cross(fu(x.x, x.y), fv(x.x, x.y)));
+			glm::vec3 nq = glm::normalize(glm::cross(qu(x.z, x.w), qv(x.z, x.w)));
 			glm::vec3 t = direction * glm::normalize(glm::cross(nf, nq));
 			int l = 0;
 			do {
@@ -1082,6 +1082,7 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 	}
 	if (ImGui::CollapsingHeader("Intersection adding")) {
 		ImGui::Checkbox("Use cursor to point intersection", &serch_for_intersections_using_cursor);
+		ImGui::InputFloat("Set D", &distance_d);
 		if (ImGui::Button("Intersection")) {
 			auto selected_objects = std::vector<std::shared_ptr<Object>>();
 			for (auto& obj : objects_list) {
