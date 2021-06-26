@@ -57,6 +57,8 @@ float near = 0.001f;
 float far = 200.0f;
 bool serch_for_intersections_using_cursor = false;
 float distance_d = 0.01f;
+
+int number_of_divisions = 20;
 Camera cam;
 Shader ourShader;
 std::unique_ptr<Cursor> cursor, center;
@@ -686,12 +688,12 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 				if (serch_for_intersections_using_cursor) {
 					xstart = glm::vec4(1, 1, 0, 0);
 					xend = glm::vec4(0, 0, 1, 1);
-					constexpr int num_off_divisions = 20;
-					constexpr float stride = 1.0f / (num_off_divisions - 1);
+					
+					float stride = 1.0f / (number_of_divisions - 1);
 					float u = 0, v = 0;
 					auto cursor_pos = cursor->GetPosition();
-					for (int s = 0; s < num_off_divisions; s++) {
-						for (int f = 0; f < num_off_divisions; f++) {
+					for (int s = 0; s < number_of_divisions; s++) {
+						for (int f = 0; f < number_of_divisions; f++) {
 							if (glm::length(cursor_pos - first[i](u, v)) < eps_cursor) {
 								xstart.x = min(u, xstart.x);
 								xstart.y = min(v, xstart.y);
@@ -711,14 +713,14 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 					randoms.clear();
 					divides.push_back(xstart);
 
-					for (int n = 0; n < 32; n++) {
+					for (int n = 0; n < 4* number_of_divisions; n++) {
 						randoms.push_back(rand() % 1000);
 					}
 
 					std::sort(randoms.begin(), randoms.end());
 					auto len = xend - xstart;
 
-					for (int n = 0; n < 8; n++) {
+					for (int n = 0; n < number_of_divisions; n++) {
 						divides.push_back({
 							(randoms[4 * n] / 1000.f) * len.x + xstart.x,
 							(randoms[4 * n + 1] / 1000.f) * len.y + xstart.y,
@@ -762,6 +764,8 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 						divides[std::min(min_first_v + 1, (int)(divides.size()) - 1)].y,
 						divides[std::min(min_second_u + 1,(int)(divides.size()) - 1)].z,
 						divides[std::min(min_second_v + 1,(int)(divides.size()) - 1)].w };
+
+					diff = first[i](x.x, x.y) - second[j](x.z, x.w);
 				}
 
 				diff = first[i](x.x, x.y) - second[j](x.z, x.w);
@@ -779,25 +783,26 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 	else { //size() == 1
 		auto first = obj[0]->GetParametrisations();
 		for (int i = 0; i < first.size(); i++) {
-			for (int j = i + 1; j < first.size(); j++) {
+			for (int j = i; j < first.size(); j++) {
 				int l = 0;
 				float eps = 0.001f;
-				auto x = glm::vec4(0.5, 0.5, 0.5, 0.5);
+				auto x = glm::vec4(rand()%1000 / 1000.0f, rand() % 1000 / 1000.0f, rand() % 1000 / 1000.0f, rand() % 1000 / 1000.0f);
 				auto xstart = glm::vec4(0, 0, 0, 0);
 				auto xend = glm::vec4(1, 1, 1, 1);
-				auto diff = first[i](x.x, x.y) - first[j](x.z, x.w);
+				
 				std::vector<glm::vec4> divides = {};
 				std::vector<int> randoms = {};
 
 				if (serch_for_intersections_using_cursor) {
-					xstart = glm::vec4(1, 1, 0, 0);
-					xend = glm::vec4(0, 0, 1, 1);
-					constexpr int num_off_divisions = 20;
-					constexpr float stride = 1.0f / (num_off_divisions - 1);
+					xstart.x = 1;
+					xstart.y = 1;
+					xend.x = 0;
+					xend.y = 0;
+					float stride = 1.0f / (number_of_divisions - 1);
 					float u = 0, v = 0;
 					auto cursor_pos = cursor->GetPosition();
-					for (int s = 0; s < num_off_divisions; s++) {
-						for (int f = 0; f < num_off_divisions; f++) {
+					for (int s = 0; s < number_of_divisions; s++) {
+						for (int f = 0; f < number_of_divisions; f++) {
 							if (glm::length(cursor_pos - first[i](u, v)) < eps_cursor) {
 								xstart.x = min(u, xstart.x);
 								xstart.y = min(v, xstart.y);
@@ -811,20 +816,22 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 					}
 				}
 
-				while ((std::abs(diff.x) > eps || std::abs(diff.y) > eps || std::abs(diff.z) > eps) && l <= 15) {
+				auto diff = first[i](x.x, x.y) - first[j](x.z, x.w);
+
+				do {
 					l++;
 					divides.clear();
 					randoms.clear();
 					divides.push_back(xstart);
 
-					for (int n = 0; n < 32; n++) {
+					for (int n = 0; n < 4* number_of_divisions; n++) {
 						randoms.push_back(rand() % 1000);
 					}
 
 					std::sort(randoms.begin(), randoms.end());
 					auto len = xend - xstart;
 					if (len.x < 0 || len.y < 0 || len.z < 0 || len.w < 0) break;
-					for (int n = 0; n < 8; n++) {
+					for (int n = 0; n < number_of_divisions; n++) {
 						divides.push_back({
 							(randoms[4 * n] / 1000.f) * len.x + xstart.x,
 							(randoms[4 * n + 1] / 1000.f) * len.y + xstart.y,
@@ -846,6 +853,7 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 								for (int r = 0; r < divides.size(); r++) {
 									diff = first[i](divides[g].x, divides[z].y) - first[j](divides[h].z, divides[r].w);
 									if (glm::length(diff) < min_len) {
+										if (i == j && abs(divides[g].x - divides[h].z) < 0.1f && abs(divides[z].y - divides[r].w) < 0.1f) continue;
 										min_len = glm::length(diff);
 										min_first_u = g;
 										min_first_v = z;
@@ -868,17 +876,22 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 						divides[std::min(min_first_v + 1, (int)(divides.size()) - 1)].y,
 						divides[std::min(min_second_u + 1,(int)(divides.size()) - 1)].z,
 						divides[std::min(min_second_v + 1,(int)(divides.size()) - 1)].w };
-				}
+
+					diff = first[i](x.x, x.y) - first[j](x.z, x.w);
+				} while (glm::length(diff) > eps && l <= 15);
 
 				diff = first[i](x.x, x.y) - first[j](x.z, x.w);
 				if (glm::length(diff) < eps)
 				{
+					if (i == j && x.x == x.z && x.y == x.w) return { glm::vec4(-1, 0, 0, 0),{-1,-1} };
 					objects_list.push_back(std::make_shared<Point>(first[i](x.x, x.y), glm::vec4(0, 0, 1, 1), ourShader));
 					objects_list.push_back(std::make_shared<Point>(first[j](x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
 
+					
 					return { x, {i,j} };
+					
 				}
-			}
+			} 
 		}
 		return { glm::vec4(-1, 0, 0, 0),{-1,-1} };
 	}
@@ -928,8 +941,9 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 	glm::vec4 x1;
 	glm::vec3 P0 = f(x.x, x.y);
 	do {
+		x = start_values;
 		while (points_on_intersection.size() < 2 ||
-			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d*0.75f )
+			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d*0.75f)
 		{
 			P0 = f(x.x, x.y);
 			glm::vec3 nf = glm::cross(fu(x.x, x.y), fv(x.x, x.y));
@@ -951,7 +965,6 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 				x.y < 0 || x.y > 1 ||
 				x.z < 0 || x.z > 1 ||
 				x.w < 0 || x.w > 1) {
-				do_other_direction = !do_other_direction;
 				break;
 			}
 			points_on_intersection.push_back(f(x.x, x.y));
@@ -959,6 +972,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 			objects_list.push_back(std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
 		}
 		direction *= -1.0f;
+		do_other_direction = !do_other_direction;
 	} while (do_other_direction);
 }
 
