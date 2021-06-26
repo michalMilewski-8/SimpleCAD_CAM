@@ -134,7 +134,7 @@ std::vector<std::function<glm::vec3(double, double)>> Torus::GetParametrisations
 			glm::cos(2 * M_PI * v) * R - glm::sin(2 * M_PI * u) * glm::cos(2 * M_PI * v) * r,
 			glm::cos(2 * M_PI * u) * r,
 			glm::sin(2 * M_PI * v) * R - glm::sin(2 * M_PI * u) * glm::sin(2 * M_PI * v) * r };
-		return res;
+		return (translate * rotate * resize * glm::vec4( res ,1));
 		});
 	return result;
 }
@@ -147,7 +147,7 @@ std::vector<std::function<glm::vec3(double, double)>> Torus::GetUParametrisation
 			-2 * M_PI * glm::cos(2 * M_PI * u) * glm::cos(2 * M_PI * v) * r,
 			-2 * M_PI * glm::sin(2 * M_PI * u) * r,
 			-2 * M_PI * glm::cos(2 * M_PI * u) * glm::sin(2 * M_PI * v) * r };
-		return res;
+		return (translate * rotate * resize * glm::vec4(res, 1));
 		});
 	return result;
 }
@@ -160,7 +160,7 @@ std::vector<std::function<glm::vec3(double, double)>> Torus::GetVParametrisation
 			-2 * M_PI * glm::sin(2 * M_PI * v) * R + 2 * M_PI * glm::sin(2 * M_PI * u) * glm::sin(2 * M_PI * v) * r,
 			0,
 			2 * M_PI* glm::cos(2 * M_PI * v) * R - 2 * M_PI * glm::sin(2 * M_PI * u) * glm::cos(2 * M_PI * v) * r };
-		return res;
+		return (translate * rotate * resize * glm::vec4(res, 1));
 		});
 	return result;
 }

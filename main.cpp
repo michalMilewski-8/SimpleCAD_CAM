@@ -958,6 +958,15 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 				//x1 = solveGauss(jac,x - func ); // gauss is broken :( - will debug in free time :D
 				x1 = x - jac_i * func;
 				x = x1;
+				if (x.x < 0) x.x += 1.0f;
+				if (x.y < 0) x.y += 1.0f;
+				if (x.z < 0) x.z += 1.0f;
+				if (x.w < 0) x.w += 1.0f;
+
+				if (x.x > 1) x.x -= 1.0f;
+				if (x.y > 1) x.y -= 1.0f;
+				if (x.z > 1) x.z -= 1.0f;
+				if (x.w > 1) x.w -= 1.0f;
 			} while (glm::length(f(x.x, x.y) - q(x.z, x.w)) > eps && l <= 15);
 
 
@@ -967,8 +976,10 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 				x.w < 0 || x.w > 1) {
 				break;
 			}
+
+			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) > eps) continue;
+
 			points_on_intersection.push_back(f(x.x, x.y));
-			objects_list.push_back(std::make_shared<Point>(f(x.x, x.y), glm::vec4(0, 0, 1, 1), ourShader));
 			objects_list.push_back(std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
 		}
 		direction *= -1.0f;
