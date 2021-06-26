@@ -917,16 +917,19 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 	auto q = obj.back()->GetParametrisations()[functions.y];
 	auto qu = obj.back()->GetUParametrisations()[functions.y];
 	auto qv = obj.back()->GetVParametrisations()[functions.y];
-	float eps = 0.001;
+	float eps = 0.001f;
 
 	bool do_other_direction = false;
 	float direction = 1.0f;
+
+	std::vector<glm::vec3> points_on_intersection{};
 
 	glm::vec4 x = start_values;
 	glm::vec4 x1;
 	glm::vec3 P0 = f(x.x, x.y);
 	do {
-		while (true)
+		while (points_on_intersection.size() < 2 ||
+			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d*0.75f )
 		{
 			P0 = f(x.x, x.y);
 			glm::vec3 nf = glm::cross(fu(x.x, x.y), fv(x.x, x.y));
@@ -951,7 +954,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 				do_other_direction = !do_other_direction;
 				break;
 			}
-
+			points_on_intersection.push_back(f(x.x, x.y));
 			objects_list.push_back(std::make_shared<Point>(f(x.x, x.y), glm::vec4(0, 0, 1, 1), ourShader));
 			objects_list.push_back(std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
 		}
