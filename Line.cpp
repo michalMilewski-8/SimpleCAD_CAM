@@ -68,6 +68,12 @@ void Line::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object>
 	}
 }
 
+void Line::Reverse()
+{
+	std::reverse(points.begin(), points.end());
+	update_object();
+}
+
 void Line::update_object()
 {
 	lines.clear();

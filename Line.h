@@ -17,6 +17,8 @@ public:
     void ClearPoints();
     void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) override;
 
+    void Reverse();
+
     static unsigned int counter;
 private:
 

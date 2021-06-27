@@ -206,6 +206,12 @@ void BezierInterpol::UpdateMyPointer(std::string constname_, const std::shared_p
 	}
 }
 
+void BezierInterpol::Reverse()
+{
+	std::reverse(points.begin(), points.end());
+	Update();
+}
+
 void BezierInterpol::update_object()
 {
 	points_.clear();

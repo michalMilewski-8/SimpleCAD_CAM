@@ -23,6 +23,8 @@
 #include "BezierFlakeC2.h"
 #include "TriangularGregoryPatch.h"
 #include "Virtual.h"
+#include "Virtual.h"
+#include "Intersection.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -771,8 +773,6 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 				diff = first[i](x.x, x.y) - second[j](x.z, x.w);
 				if (glm::length(diff) < eps)
 				{
-					objects_list.push_back(std::make_shared<Point>(first[i](x.x, x.y), glm::vec4(0, 0, 1, 1), ourShader));
-					objects_list.push_back(std::make_shared<Point>(second[j](x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
 
 					return { x, {i,j} };
 				}
@@ -884,12 +884,7 @@ std::pair<glm::vec4, glm::uvec2> look_for_intersection(std::vector<std::shared_p
 				if (glm::length(diff) < eps)
 				{
 					if (i == j && x.x == x.z && x.y == x.w) return { glm::vec4(-1, 0, 0, 0),{-1,-1} };
-					objects_list.push_back(std::make_shared<Point>(first[i](x.x, x.y), glm::vec4(0, 0, 1, 1), ourShader));
-					objects_list.push_back(std::make_shared<Point>(first[j](x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
-
-					
 					return { x, {i,j} };
-					
 				}
 			} 
 		}
@@ -923,6 +918,9 @@ glm::vec4 evaluateFfunction(glm::vec4 values, glm::vec3 t, glm::vec3 P0,
 
 void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 functions, std::vector<std::shared_ptr<Object>> obj) {
 
+	auto intersection_obj = std::make_shared<Intersection>(ourShader, obj.front(), obj.back());
+	intersection_obj->screen_width = &width_;
+	intersection_obj->screen_height = &height_;
 	auto f = obj.front()->GetParametrisations()[functions.x];
 	auto fu = obj.front()->GetUParametrisations()[functions.x];
 	auto fv = obj.front()->GetVParametrisations()[functions.x];
@@ -930,7 +928,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 	auto q = obj.back()->GetParametrisations()[functions.y];
 	auto qu = obj.back()->GetUParametrisations()[functions.y];
 	auto qv = obj.back()->GetVParametrisations()[functions.y];
-	float eps = 0.01f;
+	float eps = 0.001f;
 
 	bool do_other_direction = false;
 	float direction = 1.0f;
@@ -940,11 +938,17 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 	glm::vec4 x = start_values;
 	glm::vec4 x1;
 	glm::vec3 P0 = f(x.x, x.y);
+	points_on_intersection.push_back(f(x.x, x.y));
 	do {
 		x = start_values;
 		while (points_on_intersection.size() < 2 ||
-			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d*0.75f)
+			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d * 0.75f)
 		{
+			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) <= eps) {
+				intersection_obj->AddPoints(std::make_shared<Point>(f(x.x, x.y), glm::vec4(0, 1, 1, 1), ourShader), std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
+				intersection_obj->AddParameters({ x.x,x.y }, { x.z,x.w });
+			}
+			else break;
 			P0 = f(x.x, x.y);
 			glm::vec3 nf = glm::normalize(glm::cross(fu(x.x, x.y), fv(x.x, x.y)));
 			glm::vec3 nq = glm::normalize(glm::cross(qu(x.z, x.w), qv(x.z, x.w)));
@@ -977,14 +981,22 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 				break;
 			}
 
-			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) > eps) continue;
+			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) > eps ||
+				glm::length(points_on_intersection.back() - f(x.x, x.y)) > 2.0f*distance_d ||
+				glm::length(points_on_intersection.back() - q(x.z, x.w)) > 2.0f * distance_d) continue;
 
 			points_on_intersection.push_back(f(x.x, x.y));
-			objects_list.push_back(std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
+			
 		}
+		if (glm::length(f(x.x, x.y) - q(x.z, x.w)) <= eps) {
+			intersection_obj->AddPoints(std::make_shared<Point>(f(x.x, x.y), glm::vec4(0, 1, 1, 1), ourShader), std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
+			intersection_obj->AddParameters({ x.x,x.y }, { x.z,x.w });
+		}
+		intersection_obj->Reverse();
 		direction *= -1.0f;
 		do_other_direction = !do_other_direction;
 	} while (do_other_direction);
+	objects_list.push_back(intersection_obj);
 }
 
 void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starting_pos) {

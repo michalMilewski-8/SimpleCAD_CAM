@@ -1,8 +1,7 @@
 #pragma once
 #include "Bezier.h"
 #include "Line.h"
-#include "VirtualPoint.h"
-
+;
 class BezierInterpol :
     public Bezier,
     public std::enable_shared_from_this<BezierInterpol>
@@ -19,6 +18,7 @@ public:
     std::vector<std::shared_ptr<Object>> GetVirtualObjects() override;
 
     void UpdateMyPointer(std::string constname_, std::shared_ptr<Object> new_point) override;
+    void Reverse();
 
     static unsigned int counter;
 private:
