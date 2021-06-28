@@ -66,6 +66,8 @@ void Intersection::CreateMenu()
 		ImGui::Checkbox("Apply trimming to right object", &apply_trim_to_right);
 		ImGui::Checkbox("Fill Left texture", &fill_left_texture);
 		ImGui::Checkbox("Fill Right texture", &fill_right_texture);
+		ImGui::Checkbox("Flip right", &flip_right);
+		ImGui::Checkbox("Flip left", &flip_left);
 		if(ImGui::Button("reverse only left texture")) {
 			create_texture(true);
 		}
@@ -271,7 +273,10 @@ void Intersection::create_texture(bool reverse_left, bool reverse_right)
 		vec = glm::normalize(current_point - last_point);
 		tmp_p = last_point;
 		for (int k = 0; k < glm::length(current_point - last_point);k++) {
-			values_left[(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)][(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)] = true;
+			if(flip_left)
+				values_left[(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)][(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)] = true;
+			else 
+				values_left[(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)][(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)] = true;
 			tmp_p += vec;
 		}
 		
@@ -305,7 +310,10 @@ void Intersection::create_texture(bool reverse_left, bool reverse_right)
 		vec = glm::normalize(current_point - last_point);
 		tmp_p = last_point;
 		for (int k = 0; k < glm::length(current_point - last_point); k++) {
-			values_right[(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)][(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)] = true;
+			if (flip_right)
+				values_right[(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)][(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)] = true;
+			else
+				values_right[(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)][(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)] = true;
 			tmp_p += vec;
 		}
 

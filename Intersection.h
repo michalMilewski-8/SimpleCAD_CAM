@@ -53,6 +53,9 @@ private:
     bool fill_left_texture = false;
     bool fill_right_texture = false;
 
+    bool flip_right = false;
+    bool flip_left = false;
+
     const int n = 1024;
 };
 
