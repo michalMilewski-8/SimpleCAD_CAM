@@ -16,8 +16,11 @@ public:
     std::shared_ptr<BezierInterpol> CreateInterpolationBezierLine(bool left = true);
     void Reverse();
 
+    void create_texture(); //move to private
+
     static unsigned int counter;
 private:
+    
 
     std::vector<std::shared_ptr<Point>> points_left;
     std::vector<std::shared_ptr<Point>> points_right;
@@ -33,9 +36,17 @@ private:
     std::weak_ptr<Object> obj_left;
     std::weak_ptr<Object> obj_right;
 
+    unsigned int texture_left_ID;
+    unsigned int texture_right_ID;
+
     bool show_left = false;
     bool show_right = true;
     bool show_points = false;
     bool show_interpolation = false;
+    bool testure_was_created = false;
+
+    bool show_testures = false;
+
+    const int n = 1024;
 };
 

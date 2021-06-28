@@ -944,7 +944,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 		while (points_on_intersection.size() < 2 ||
 			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d * 0.75f)
 		{
-			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) <= eps) {
+			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) <= 10*eps) {
 				intersection_obj->AddPoints(std::make_shared<Point>(f(x.x, x.y), glm::vec4(0, 1, 1, 1), ourShader), std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
 				intersection_obj->AddParameters({ x.x,x.y }, { x.z,x.w });
 			}
@@ -997,6 +997,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 		do_other_direction = !do_other_direction;
 	} while (do_other_direction);
 	objects_list.push_back(intersection_obj);
+	intersection_obj->create_texture();
 }
 
 void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starting_pos) {
@@ -1106,6 +1107,7 @@ void adding_menu(std::vector<std::shared_ptr<Object>>& objects, glm::vec3 starti
 	if (ImGui::CollapsingHeader("Intersection adding")) {
 		ImGui::Checkbox("Use cursor to point intersection", &serch_for_intersections_using_cursor);
 		ImGui::InputFloat("Set D", &distance_d);
+		ImGui::SliderInt("Set number of diuvisions", &number_of_divisions,4,50);
 		if (ImGui::Button("Intersection")) {
 			auto selected_objects = std::vector<std::shared_ptr<Object>>();
 			for (auto& obj : objects_list) {
