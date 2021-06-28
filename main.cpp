@@ -939,11 +939,16 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 	glm::vec4 x1;
 	glm::vec3 P0 = f(x.x, x.y);
 	points_on_intersection.push_back(f(x.x, x.y));
+	int let_one_more_point = 0;
+	bool do_not_add_next_point = false;
 	do {
 		x = start_values;
 		while (points_on_intersection.size() < 2 ||
-			glm::length(points_on_intersection.front() - points_on_intersection.back()) > distance_d * 0.75f)
+			glm::length(points_on_intersection[0] - points_on_intersection.back()) > distance_d * 0.75f|| let_one_more_point<1)
 		{
+			if (!(points_on_intersection.size() < 2 ||
+				glm::length(points_on_intersection[0] - points_on_intersection.back()) > distance_d * 0.75f))
+				let_one_more_point++;
 			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) <= 10*eps) {
 				intersection_obj->AddPoints(std::make_shared<Point>(f(x.x, x.y), glm::vec4(0, 1, 1, 1), ourShader), std::make_shared<Point>(q(x.z, x.w), glm::vec4(0, 1, 0, 1), ourShader));
 				intersection_obj->AddParameters({ x.x,x.y }, { x.z,x.w });
@@ -971,7 +976,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 				if (x.y > 1) x.y -= 1.0f;
 				if (x.z > 1) x.z -= 1.0f;
 				if (x.w > 1) x.w -= 1.0f;
-			} while (glm::length(f(x.x, x.y) - q(x.z, x.w)) > eps && l <= 15);
+			} while (glm::length(f(x.x, x.y) - q(x.z, x.w)) > eps && l <= 25);
 
 
 			if (x.x < 0 || x.x > 1 ||
@@ -981,9 +986,9 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 				break;
 			}
 
-			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) > eps ||
-				glm::length(points_on_intersection.back() - f(x.x, x.y)) > 2.0f*distance_d ||
-				glm::length(points_on_intersection.back() - q(x.z, x.w)) > 2.0f * distance_d) continue;
+			if (glm::length(f(x.x, x.y) - q(x.z, x.w)) > 10*eps ||
+				glm::length(points_on_intersection.back() - f(x.x, x.y)) > 3.0f * distance_d ||
+				glm::length(points_on_intersection.back() - q(x.z, x.w)) > 3.0f * distance_d) break;
 
 			points_on_intersection.push_back(f(x.x, x.y));
 			
@@ -993,6 +998,7 @@ void look_for_other_intersection_points(glm::vec4 start_values, glm::uvec2 funct
 			intersection_obj->AddParameters({ x.x,x.y }, { x.z,x.w });
 		}
 		intersection_obj->Reverse();
+		std::reverse(points_on_intersection.begin(), points_on_intersection.end());
 		direction *= -1.0f;
 		do_other_direction = !do_other_direction;
 	} while (do_other_direction);

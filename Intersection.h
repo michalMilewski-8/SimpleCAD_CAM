@@ -16,11 +16,12 @@ public:
     std::shared_ptr<BezierInterpol> CreateInterpolationBezierLine(bool left = true);
     void Reverse();
 
-    void create_texture(); //move to private
+    void create_texture(bool reverse_left = false, bool reverse_right = false); //move to private
 
     static unsigned int counter;
 private:
     
+    void flood_fill(std::vector<std::vector<bool>>& data);
 
     std::vector<std::shared_ptr<Point>> points_left;
     std::vector<std::shared_ptr<Point>> points_right;
@@ -46,6 +47,11 @@ private:
     bool testure_was_created = false;
 
     bool show_testures = false;
+    bool apply_trim_to_left = false;
+    bool apply_trim_to_right = false;
+
+    bool fill_left_texture = false;
+    bool fill_right_texture = false;
 
     const int n = 1024;
 };

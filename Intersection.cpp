@@ -1,4 +1,5 @@
 #include "Intersection.h"
+#include<queue>
 
 unsigned int Intersection::counter = 1;
 
@@ -61,6 +62,44 @@ void Intersection::CreateMenu()
 		ImGui::Checkbox("Show points", &show_points);
 		ImGui::Checkbox("Show interpolation", &show_interpolation);
 		ImGui::Checkbox("Show parametrization textures", &show_testures);
+		ImGui::Checkbox("Apply trimming to left object", &apply_trim_to_left);
+		ImGui::Checkbox("Apply trimming to right object", &apply_trim_to_right);
+		ImGui::Checkbox("Fill Left texture", &fill_left_texture);
+		ImGui::Checkbox("Fill Right texture", &fill_right_texture);
+		if(ImGui::Button("reverse only left texture")) {
+			create_texture(true);
+		}
+		if(ImGui::Button("reverse only right texture")) {
+			create_texture(false,true);
+		}
+		if (ImGui::Button("reverse both textures")) {
+			create_texture(true, true);
+		}
+		if (ImGui::Button("reverse non textures")) {
+			create_texture();
+		}
+		if (apply_trim_to_left && testure_was_created) {
+			if (!obj_left.expired()) {
+				obj_left.lock()->textureID = texture_left_ID;
+			}
+		}
+		else {
+			if (!obj_left.expired()) {
+				obj_left.lock()->textureID = 0;
+			}
+		}
+
+		if (apply_trim_to_right && testure_was_created) {
+			if (!obj_right.expired()) {
+				obj_right.lock()->textureID = texture_right_ID;
+			}
+		}
+		else {
+			if (!obj_right.expired()) {
+				obj_right.lock()->textureID = 0;
+			}
+		}
+
 		if (testure_was_created && show_testures) {
 			ImGui::Begin("Left Object parametrisation##uu", &show_testures);
 			ImGuiIO& io = ImGui::GetIO();
@@ -182,7 +221,7 @@ void Intersection::Reverse()
 	interpolation_right->Reverse();
 }
 
-void Intersection::create_texture()
+void Intersection::create_texture(bool reverse_left, bool reverse_right)
 {
 	if (parameters_left.size() < 2) return;
 	
@@ -266,20 +305,44 @@ void Intersection::create_texture()
 		vec = glm::normalize(current_point - last_point);
 		tmp_p = last_point;
 		for (int k = 0; k < glm::length(current_point - last_point); k++) {
-			values_right[(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)][(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)] = true;
+			values_right[(int)(tmp_p.y >= n ? tmp_p.y - n : tmp_p.y < 0 ? tmp_p.y + n : tmp_p.y)][(int)(tmp_p.x >= n ? tmp_p.x - n : tmp_p.x < 0 ? tmp_p.x + n : tmp_p.x)] = true;
 			tmp_p += vec;
 		}
 
 		last_point = parameters_right[i];
 	}
 
+	if (fill_right_texture) {
+		flood_fill(values_right);
+	}
+
+	if (fill_left_texture) {
+		flood_fill(values_left);
+	}
+
+	if (reverse_left) {
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				values_left[i][j] = !values_left[i][j];
+			}
+		}
+	}
+
+	if (reverse_right) {
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				values_right[i][j] = !values_right[i][j];
+			}
+		}
+	}
+
 	glGenTextures(1, &texture_left_ID);
 	glBindTexture(GL_TEXTURE_2D, texture_left_ID);
 	// set the texture wrapping/filtering options (on the currently bound texture object)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	// load and generate the texture
 	std::vector<unsigned char>data = {};
 	for (int i = 0; i < n; i++) {
@@ -306,10 +369,11 @@ void Intersection::create_texture()
 	glGenTextures(1, &texture_right_ID);
 	glBindTexture(GL_TEXTURE_2D, texture_right_ID);
 	// set the texture wrapping/filtering options (on the currently bound texture object)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	// load and generate the texture
 	data.clear();
 	for (int i = 0; i < n; i++) {
@@ -333,4 +397,26 @@ void Intersection::create_texture()
 	}
 
 	testure_was_created = true;
+}
+
+void Intersection::flood_fill(std::vector<std::vector<bool>>& data)
+{
+	std::queue<glm::uvec2> to_fill;
+	to_fill.push({ n / 2,n / 2 });
+
+	glm::uvec2 current;
+	while (!to_fill.empty()) {
+		current = to_fill.front();
+		to_fill.pop();
+		if (data[current.x][current.y]) continue;
+		data[current.x][current.y] = true;
+		if (current.x < n - 1) 
+			to_fill.push({ current.x + 1,current.y });
+		if (current.x > 0)
+			to_fill.push({ current.x - 1,current.y });
+		if (current.y < n - 1)
+			to_fill.push({ current.x,current.y + 1 });
+		if (current.y > 0)
+			to_fill.push({ current.x,current.y - 1 });
+	}
 }

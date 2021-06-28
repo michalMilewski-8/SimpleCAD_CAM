@@ -61,6 +61,8 @@ public:
 
 	std::string constname;
 
+	unsigned int textureID = 0;
+
 protected:
 	virtual void update_object() {};
 	virtual void inform_owner_of_change() {};

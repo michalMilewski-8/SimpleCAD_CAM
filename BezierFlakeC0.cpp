@@ -74,12 +74,21 @@ void BezierFlakeC0::DrawObject(glm::mat4 mvp_)
 	glUniform1f(xLoc, number_of_divisions[0]);
 
 	int yLoc = glGetUniformLocation(shader.ID, "y");
-	glUniform1f(yLoc,number_of_divisions[1]);
+	glUniform1f(yLoc, number_of_divisions[1]);
+
+	int patch_size = glGetUniformLocation(shader.ID, "patch_size");
+	glUniform2f(patch_size, num_of_flakes.x, num_of_flakes.y);
+
+	auto texLocation = glGetUniformLocation(shader.ID, "trimm_texture");
+
+	glUniform1i(texLocation, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	glBindVertexArray(VAO);
-	
+
 	glDrawElements(GL_PATCHES, patches.size(), GL_UNSIGNED_INT, 0);
-	
+
 	glBindVertexArray(0);
 }
 
@@ -292,7 +301,7 @@ std::vector<std::function<glm::vec3(double, double)>> BezierFlakeC0::GetUParamet
 		glm::vec3 bu2 = decastelieu(v_, p20, p21, p22, p23);
 		glm::vec3 bu3 = decastelieu(v_, p30, p31, p32, p33);
 
-		return (float)num_of_flakes.x* pochodna(u_, bu0, bu1, bu2, bu3);
+		return (float)num_of_flakes.x * pochodna(u_, bu0, bu1, bu2, bu3);
 		});
 
 	return result;
@@ -381,7 +390,7 @@ void BezierFlakeC0::Update()
 		polygon->Update();
 }
 
-void BezierFlakeC0::UpdateMyPointer(std::string constname_,const std::shared_ptr<Object> new_point)
+void BezierFlakeC0::UpdateMyPointer(std::string constname_, const std::shared_ptr<Object> new_point)
 {
 	for (int i = 0; i < points.size(); i++) {
 		auto point = points[i];
@@ -395,7 +404,7 @@ void BezierFlakeC0::UpdateMyPointer(std::string constname_,const std::shared_ptr
 std::vector<std::vector<std::vector<std::shared_ptr<Point>>>> BezierFlakeC0::GetAllPatches()
 {
 	auto res = std::vector<std::vector<std::vector<std::shared_ptr<Point>>>>();
-	
+
 	for (int i = 0; i < num_of_flakes.x * num_of_flakes.y; i++) {
 		auto patch = std::vector<std::vector<std::shared_ptr<Point>>>();
 		for (int j = 0; j < 4; j++) {
@@ -556,17 +565,17 @@ void BezierFlakeC0::create_curve()
 		points_on_curve.push_back(sp.x);
 		points_on_curve.push_back(sp.y);
 		points_on_curve.push_back(sp.z);
-	/*	points_on_curve.push_back(color.r);
-		points_on_curve.push_back(color.g);
-		points_on_curve.push_back(color.b);
-		points_on_curve.push_back(color.a);*/
-	
+		/*	points_on_curve.push_back(color.r);
+			points_on_curve.push_back(color.g);
+			points_on_curve.push_back(color.b);
+			points_on_curve.push_back(color.a);*/
+
 		position += sp;
 		licznik++;
 	}
 	position /= licznik;
 	if (!owners_added)
-	owners_added = true;
+		owners_added = true;
 }
 
 void BezierFlakeC0::index_vertices()

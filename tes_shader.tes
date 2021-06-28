@@ -3,6 +3,10 @@
 layout( quads, equal_spacing,cw) in;
 
 uniform mat4 mvp;
+uniform sampler2D trimm_texture;
+uniform vec2 patch_size;
+
+out vec4 f_color;
 
 vec4 drawBrezier4(float t, vec4 B0, vec4 B1, vec4 B2, vec4 B3) {
     float one_minus_t = 1.0 - t;
@@ -22,6 +26,8 @@ vec4 drawBrezier4(float t, vec4 B0, vec4 B1, vec4 B2, vec4 B3) {
 
 void main( )
 {
+	f_color = vec4(1,1,1,1);
+
 	vec4 p00 = gl_in[ 0].gl_Position;
 	vec4 p10 = gl_in[ 1].gl_Position;
 	vec4 p20 = gl_in[ 2].gl_Position;
@@ -41,6 +47,17 @@ void main( )
 
 	float u = gl_TessCoord.x;
 	float v = gl_TessCoord.y;
+
+	int u_pos = gl_PrimitiveID / int(patch_size.y);
+	int v_pos = gl_PrimitiveID - (u_pos * int(patch_size.y));
+	float u_rel = (u_pos+ u)/float(patch_size.x);
+	float v_rel = (v_pos+ v)/float(patch_size.y);
+	if(u == 1.0f && u_pos == int(patch_size.x) - 1 ) u_rel = 1.0f;
+	if(v == 1.0f && v_pos == int(patch_size.y) - 1 ) v_rel = 1.0f;
+	if(u == 0.0f && u_pos == 0 ) u_rel = 0.0f;
+	if(v == 0.0f && v_pos == 0 ) v_rel = 0.0f;
+	vec4 trimming = texture(trimm_texture, vec2(u_rel,v_rel));
+	if(trimming.x > 0.5) f_color = vec4(0,0,0,0);
 
 	vec4 bu0 = drawBrezier4(v,p00,p10,p20,p30);
 	vec4 bu1 = drawBrezier4(v,p01,p11,p21,p31);
