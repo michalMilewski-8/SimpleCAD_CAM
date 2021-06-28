@@ -4,7 +4,7 @@
 unsigned int Torus::counter = 1;
 
 Torus::Torus(float R, float r, int vertical, int horizontal, glm::vec4 color, Shader sh) :
-	Object(sh, 7)
+	Object(sh, 9)
 {
 	sprintf_s(name, 512, ("Torus " + std::to_string(counter)).c_str());
 	constname = "Torus " + std::to_string(counter);
@@ -14,12 +14,19 @@ Torus::Torus(float R, float r, int vertical, int horizontal, glm::vec4 color, Sh
 	vertical_points_number = vertical;
 	horizontal_points_number = horizontal;
 	this->color = color;
+	shader = Shader("shader_tex.vs","shader_tex.fs");
 	update_object();
 }
 
 void Torus::DrawObject(glm::mat4 mvp)
 {
 	Object::DrawObject(mvp);
+	auto texLocation = glGetUniformLocation(shader.ID, "trimm_texture");
+
+	glUniform1i(texLocation, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawElements(GL_LINES,triangles.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
@@ -201,9 +208,10 @@ void Torus::create_torus_points() {
 
 	for (int i = 0; i < horizontal_points_number; i++) {
 		float beta = i * horizontal_stride;
+		float u = beta / 360.0f;
 		for (int j = 0; j < vertical_points_number; j++) {
 			float alfa = j * vertical_stride;
-
+			float v = alfa / 360.0f;
 			glm::vec3 point = torus_point(glm::radians(alfa), glm::radians(beta));
 			points.push_back(point.x);
 			points.push_back(point.y);
@@ -219,6 +227,9 @@ void Torus::create_torus_points() {
 				points.push_back(0.0f);
 			}
 			points.push_back(1.0f);
+
+			points.push_back(v);
+			points.push_back(u);
 
 			triangles.push_back(i * vertical_points_number + j);
 			//triangles.push_back(((i + 1) % horizontal_points_number) * vertical_points_number + (vertical_points_number + (j - 1) % vertical_points_number) % vertical_points_number);
@@ -254,4 +265,6 @@ void Torus::update_object()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, description_number * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, description_number * sizeof(float), (void*)(7 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 }

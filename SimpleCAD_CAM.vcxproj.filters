@@ -209,5 +209,7 @@
     <None Include="tes_grzegorz_shader.tes" />
     <None Include="tes_grzegorz_shader.tcs" />
     <None Include="..\..\..\Piotrkowe repoa\MGR\sem1\Modelowanie geometryczne\Interfejs\shaders\gregoryDomainShader.ds" />
+    <None Include="shader_tex.vs" />
+    <None Include="shader_tex.fs" />
   </ItemGroup>
 </Project>

@@ -52,11 +52,8 @@ void main( )
 	int v_pos = gl_PrimitiveID - (u_pos * int(patch_size.y));
 	float u_rel = (u_pos+ u)/float(patch_size.x);
 	float v_rel = (v_pos+ v)/float(patch_size.y);
-	if(u == 1.0f && u_pos == int(patch_size.x) - 1 ) u_rel = 1.0f;
-	if(v == 1.0f && v_pos == int(patch_size.y) - 1 ) v_rel = 1.0f;
-	if(u == 0.0f && u_pos == 0 ) u_rel = 0.0f;
-	if(v == 0.0f && v_pos == 0 ) v_rel = 0.0f;
-	vec4 trimming = texture(trimm_texture, vec2(u_rel,v_rel));
+
+	vec4 trimming = texture(trimm_texture, vec2(v_rel,u_rel));
 	if(trimming.x > 0.5) f_color = vec4(0,0,0,0);
 
 	vec4 bu0 = drawBrezier4(v,p00,p10,p20,p30);
